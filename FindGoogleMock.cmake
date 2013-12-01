@@ -57,6 +57,13 @@ option (GTEST_PREFER_SOURCE_BUILD
 option (GMOCK_PREFER_SOURCE_BUILD
         "Whether or not to prefer a source build of Google Mock." OFF)
 
+# Situation 0. Google Test and Google Mock were already found. Use those
+if (GTEST_FOUND AND GMOCK_FOUND)
+
+    return ()
+
+endif (GTEST_FOUND AND GMOCK_FOUND)
+
 # Situation 1. Google Test and Google Mock are shipped in library form.
 # Use the libraries unless there we've been asked not to.
 if (NOT GTEST_PREFER_SOURCE_BUILD)
