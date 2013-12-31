@@ -217,6 +217,17 @@ macro (_import_library_from_extproject library_target location extproj)
 
 endmacro (_import_library_from_extproject)
 
+# Workaround for some generators setting a different output directory
+function (_get_build_directory_suffix_for_generator SUFFIX)
+
+    if (${CMAKE_GENERATOR} STREQUAL "Xcode")
+
+        set (${SUFFIX} ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
+
+    endif (${CMAKE_GENERATOR} STREQUAL "Xcode")
+
+endfunction (_get_build_directory_suffix_for_generator)
+
 if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
     include (ExternalProject)
@@ -243,10 +254,17 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
     set (GMOCK_LIBRARY gmock)
     set (GMOCK_MAIN_LIBRARY gmock_main)
 
-    set (GMOCK_LIBRARY_PATH ${GMOCK_DEFAULT_BINARY_DIR}/libgmock.a)
-    set (GMOCK_MAIN_LIBRARY_PATH ${GMOCK_DEFAULT_BINARY_DIR}/libgmock_main.a)
-    set (GTEST_LIBRARY_PATH ${GTEST_DEFAULT_BINARY_DIR}/libgtest.a)
-    set (GTEST_MAIN_LIBRARY_PATH ${GTEST_DEFAULT_BINARY_DIR}/libgtest_main.a)
+    set (BUILD_SUFFIX)
+    _get_build_directory_suffix_for_generator (BUILD_SUFFIX)
+
+    set (GMOCK_LIBRARY_PATH
+         ${GMOCK_DEFAULT_BINARY_DIR}/${BUILD_SUFFIX}/libgmock.a)
+    set (GMOCK_MAIN_LIBRARY_PATH
+         ${GMOCK_DEFAULT_BINARY_DIR}/${BUILD_SUFFIX}/libgmock_main.a)
+    set (GTEST_LIBRARY_PATH
+         ${GTEST_DEFAULT_BINARY_DIR}/${BUILD_SUFFIX}/libgtest.a)
+    set (GTEST_MAIN_LIBRARY_PATH
+         ${GTEST_DEFAULT_BINARY_DIR}/${BUILD_SUFFIX}/libgtest_main.a)
 
     set (GTEST_INCLUDE_DIR ${GTEST_SOURCE_DIR}/include)
     set (GMOCK_INCLUDE_DIR ${GMOCK_SOURCE_DIR}/include)
