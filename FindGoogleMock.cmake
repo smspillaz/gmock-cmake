@@ -163,7 +163,7 @@ endif (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
 # Situation 3. Google Mock was not shipped in source form, but Google
 # Test was, and it is acceptable to use Google Mock in library form.
-if (NOT GTEST_FOUND OR NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
+if (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
     # Find the the Google Test include directory
     # by searching the system-wide include directory
@@ -174,9 +174,9 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
     if (GTEST_INCLUDE_DIR)
 
         set (GTEST_INCLUDE_BASE "include/")
-        _find_prefix_from_base (${GMOCK_INCLUDE_BASE}
-                                ${GMOCK_INCLUDE_DIR}
-                                GMOCK_INCLUDE_PREFIX)
+        _find_prefix_from_base (${GTEST_INCLUDE_BASE}
+                                ${GTEST_INCLUDE_DIR}
+                                GTEST_INCLUDE_PREFIX)
 
         find_path (GTEST_SRC_DIR
                    CMakeLists.txt
@@ -196,6 +196,7 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
             if (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY)
 
                 set (GTEST_FOUND TRUE)
+                set (GMOCK_FOUND TRUE)
 
             endif (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY)
 
@@ -203,7 +204,7 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
     endif (GTEST_INCLUDE_DIR)
 
-endif (NOT GTEST_FOUND OR NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
+endif (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
 # Situation 4. Neither was shipped in source form.
 # Set up an external project, download it and build it there.
