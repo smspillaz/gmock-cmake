@@ -222,7 +222,15 @@ function (_get_build_directory_suffix_for_generator SUFFIX)
 
     if (${CMAKE_GENERATOR} STREQUAL "Xcode")
 
-        set (${SUFFIX} ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
+        if (CMAKE_BUILD_TYPE)
+
+            set (${SUFFIX} ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
+
+        else (CMAKE_BUILD_TYPE)
+
+            set (${SUFFIX} "Debug" PARENT_SCOPE)
+
+        endif (CMAKE_BUILD_TYPE)
 
     endif (${CMAKE_GENERATOR} STREQUAL "Xcode")
 
