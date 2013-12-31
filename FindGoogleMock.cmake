@@ -122,7 +122,7 @@ endfunction (_find_prefix_from_base)
 # Google Test or Google Mock wasn't shipped in library form.
 # Try to see if Google Mock was shipped in source form and build
 # both libraries.
-if (NOT GTEST_FOUND OR GMOCK_FOUND)
+if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
     # Find the Google Mock include directory by
     # searching the system paths
@@ -159,7 +159,7 @@ if (NOT GTEST_FOUND OR GMOCK_FOUND)
 
     endif (GMOCK_INCLUDE_DIR)
 
-endif (NOT GTEST_FOUND OR GMOCK_FOUND)
+endif (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
 # Situation 3. Google Mock was not shipped in source form, but Google
 # Test was, and it is acceptable to use Google Mock in library form.
