@@ -213,6 +213,8 @@ macro (_import_library_from_extproject library_target location extproj)
     add_library (${library_target} STATIC IMPORTED GLOBAL)
     set_target_properties (${library_target}
                            PROPERTIES IMPORTED_LOCATION ${location})
+    set_target_properties (${library_target}
+                           PROPERTIES EXTERNAL_PROJECT ${extproj})
     add_dependencies (${library_target} ${extproj})
 
 endmacro (_import_library_from_extproject)
