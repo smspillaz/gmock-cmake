@@ -24,6 +24,23 @@
 # There is some trickiness that comes with setting up both Google Test and
 # Google Mock. Different vendors tend to ship it in different ways.
 #
+# 0. A parent directory could have build Google Test and Google Mock,
+#    and have provided us with the relevant paths in the form of
+#    the following options:
+#
+#    GTEST_EXTERNAL_SET_INCLUDE_DIR
+#    GMOCK_EXTERNAL_SET_INCLUDE_DIR
+#    GTEST_EXTERNAL_SET_LIBRARY
+#    GMOCK_EXTERNAL_SET_LIBRARY
+#    GTEST_EXTERNAL_SET_MAIN_LIBRARY
+#    GMOCK_EXTERNAL_SET_MAIN_LIBRARY
+#
+#    A parent should also provide the following variable, as a dependency
+#    to add in order to ensure that the Google Test and Google Mock
+#    libraries are available when this target is built.
+#
+#    GTEST_AND_GMOCK_EXTERNAL_SET_DEPENDENCY
+#
 # 1. Google Test and Google Mock are shipped as a pre-built library
 #    in which case we can use both and set the include dirs.
 # 2. Only Google Mock is shipped in source-form, including a distribution
@@ -57,48 +74,106 @@ option (GTEST_PREFER_SOURCE_BUILD
 option (GMOCK_PREFER_SOURCE_BUILD
         "Whether or not to prefer a source build of Google Mock." OFF)
 
-# Situation 0. Google Test and Google Mock were already found. Use those
+macro (_import_library_from_extproject library_target location extproj)
+
+    add_library (${library_target} STATIC IMPORTED GLOBAL)
+    set_target_properties (${library_target}
+                           PROPERTIES IMPORTED_LOCATION ${location})
+    set_target_properties (${library_target}
+                           PROPERTIES EXTERNAL_PROJECT ${extproj})
+    add_dependencies (${library_target} ${extproj})
+
+endmacro (_import_library_from_extproject)
+
+# Already found, return
 if (GTEST_FOUND AND GMOCK_FOUND)
 
     return ()
 
 endif (GTEST_FOUND AND GMOCK_FOUND)
 
+# Situation 0. Google Test and Google Mock were provided by the user.
+if (GTEST_EXTERNAL_SET_INCLUDE_DIR AND
+    GMOCK_EXTERNAL_SET_INCLUDE_DIR AND
+    GTEST_EXTERNAL_SET_LIBRARY AND
+    GMOCK_EXTERNAL_SET_LIBRARY AND
+    GTEST_EXTERNAL_SET_MAIN_LIBRARY AND
+    GMOCK_EXTERNAL_SET_MAIN_LIBRARY AND
+    GTEST_AND_GMOCK_EXTERNAL_SET_DEPENDENCY)
+
+    set (GTEST_INCLUDE_DIR ${GTEST_EXTERNAL_SET_INCLUDE_DIR})
+    set (GMOCK_INCLUDE_DIR ${GMOCK_EXTERNAL_SET_INCLUDE_DIR})
+
+    set (_library_dependency ${GTEST_AND_GMOCK_EXTERNAL_SET_DEPENDENCY})
+
+    _import_library_from_extproject (gtest
+                                     ${GTEST_EXTERNAL_SET_LIBRARY}
+                                     ${_library_dependency})
+    _import_library_from_extproject (gmock
+                                     ${GMOCK_EXTERNAL_SET_LIBRARY}
+                                     ${_library_dependency})
+    _import_library_from_extproject (gtest_main
+                                     ${GTEST_EXTERNAL_SET_MAIN_LIBRARY}
+                                     ${_library_dependency})
+    _import_library_from_extproject (gmock_main
+                                     ${GMOCK_EXTERNAL_SET_MAIN_LIBRARY}
+                                     ${_library_dependency})
+
+    set (GTEST_FOUND 1)
+    set (GMOCK_FOUND 1)
+
+    # We want to specify this so that the target names
+    # are re-used.
+    set (GTEST_CREATED_TARGET 1)
+    set (GMOCK_CREATED_TARGET 1)
+
+endif (GTEST_EXTERNAL_SET_INCLUDE_DIR AND
+       GMOCK_EXTERNAL_SET_INCLUDE_DIR AND
+       GTEST_EXTERNAL_SET_LIBRARY AND
+       GMOCK_EXTERNAL_SET_LIBRARY AND
+       GTEST_EXTERNAL_SET_MAIN_LIBRARY AND
+       GMOCK_EXTERNAL_SET_MAIN_LIBRARY AND
+       GTEST_AND_GMOCK_EXTERNAL_SET_DEPENDENCY)
+
 # Situation 1. Google Test and Google Mock are shipped in library form.
 # Use the libraries unless there we've been asked not to.
-if (NOT GTEST_PREFER_SOURCE_BUILD)
+if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
-    find_package (GTest QUIET)
+    if (NOT GTEST_PREFER_SOURCE_BUILD)
 
-endif (NOT GTEST_PREFER_SOURCE_BUILD)
+        find_package (GTest QUIET)
 
-if (NOT GMOCK_PREFER_SOURCE_BUILD)
+    endif (NOT GTEST_PREFER_SOURCE_BUILD)
 
-    # We must try to find google-mock first, if that is unavailable then
-    # building gmock will build both it and google-test
-    if (GTEST_FOUND)
+    if (NOT GMOCK_PREFER_SOURCE_BUILD)
 
-        find_library (GMOCK_LIBRARY gmock)
-        find_library (GMOCK_MAIN_LIBRARY gmock_main)
+        # We must try to find google-mock first, if that is unavailable then
+        # building gmock will build both it and google-test
+        if (GTEST_FOUND)
 
-        # Find the Google Mock include directory by
-        # searching the system paths
-        find_path (GMOCK_INCLUDE_DIR
-                   gmock/gmock.h)
+            find_library (GMOCK_LIBRARY gmock)
+            find_library (GMOCK_MAIN_LIBRARY gmock_main)
 
-        if (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY AND GMOCK_INCLUDE_DIR)
+            # Find the Google Mock include directory by
+            # searching the system paths
+            find_path (GMOCK_INCLUDE_DIR
+                       gmock/gmock.h)
 
-            # Library forms are available and acceptable, we have found
-            # both Google Test and Google Mock
+            if (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY AND GMOCK_INCLUDE_DIR)
 
-            set (GTEST_FOUND TRUE)
-            set (GMOCK_FOUND TRUE)
+                # Library forms are available and acceptable, we have found
+                # both Google Test and Google Mock
 
-        endif (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY AND GMOCK_INCLUDE_DIR)
+                set (GTEST_FOUND TRUE)
+                set (GMOCK_FOUND TRUE)
 
-    endif (GTEST_FOUND)
+            endif (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY AND GMOCK_INCLUDE_DIR)
 
-endif (NOT GMOCK_PREFER_SOURCE_BUILD)
+        endif (GTEST_FOUND)
+
+    endif (NOT GMOCK_PREFER_SOURCE_BUILD)
+
+endif (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
 function (_find_prefix_from_base INCLUDE_BASE INCLUDE_DIR PREFIX_VAR)
 
@@ -149,8 +224,8 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
             add_subdirectory (${GMOCK_SRC_DIR}
                               ${CMAKE_CURRENT_BINARY_DIR}/src/gmock)
 
-            set (GTEST_HAVE_SOURCES TRUE)
-            set (GMOCK_HAVE_SOURCES TRUE)
+            set (GTEST_CREATED_TARGET TRUE)
+            set (GMOCK_CREATED_TARGET TRUE)
 
             set (GTEST_FOUND TRUE)
             set (GMOCK_FOUND TRUE)
@@ -188,7 +263,7 @@ if (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
             add_subdirectory (${GTEST_SRC_DIR}
                               ${CMAKE_CURRENT_BINARY_DIR}/src/gtest)
 
-            set (GTEST_HAVE_SOURCES TRUE)
+            set (GTEST_CREATED_TARGET TRUE)
 
             find_library (GMOCK_LIBRARY gmock)
             find_library (GMOCK_MAIN_LIBRARY gmock_main)
@@ -208,16 +283,6 @@ endif (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
 # Situation 4. Neither was shipped in source form.
 # Set up an external project, download it and build it there.
-macro (_import_library_from_extproject library_target location extproj)
-
-    add_library (${library_target} STATIC IMPORTED GLOBAL)
-    set_target_properties (${library_target}
-                           PROPERTIES IMPORTED_LOCATION ${location})
-    set_target_properties (${library_target}
-                           PROPERTIES EXTERNAL_PROJECT ${extproj})
-    add_dependencies (${library_target} ${extproj})
-
-endmacro (_import_library_from_extproject)
 
 # Workaround for some generators setting a different output directory
 function (_get_build_directory_suffix_for_generator SUFFIX)
@@ -311,19 +376,19 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
 else (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
-    if (GTEST_HAVE_SOURCES)
+    if (GTEST_CREATED_TARGET)
 
         set (GTEST_LIBRARY gtest)
         set (GTEST_MAIN_LIBRARY gtest_main)
 
-    endif (GTEST_HAVE_SOURCES)
+    endif (GTEST_CREATED_TARGET)
 
-    if (GMOCK_HAVE_SOURCES)
+    if (GMOCK_CREATED_TARGET)
 
         set (GMOCK_LIBRARY gmock)
         set (GMOCK_MAIN_LIBRARY gmock_main)
 
-    endif (GMOCK_HAVE_SOURCES)
+    endif (GMOCK_CREATED_TARGET)
 
     set (GTEST_BOTH_LIBRARIES
          ${CMAKE_THREAD_LIBS_INIT}
