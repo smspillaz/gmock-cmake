@@ -74,11 +74,17 @@ option (GTEST_PREFER_SOURCE_BUILD
 option (GMOCK_PREFER_SOURCE_BUILD
         "Whether or not to prefer a source build of Google Mock." OFF)
 
-macro (_import_library_from_extproject library_target location extproj)
+macro (_import_library library_target location)
 
     add_library (${library_target} STATIC IMPORTED GLOBAL)
     set_target_properties (${library_target}
                            PROPERTIES IMPORTED_LOCATION ${location})
+
+endmacro (_import_library)
+
+macro (_import_library_from_extproject library_target location extproj)
+
+    _import_library (${library_target} ${location})
     set_target_properties (${library_target}
                            PROPERTIES EXTERNAL_PROJECT ${extproj})
     add_dependencies (${library_target} ${extproj})
@@ -98,26 +104,15 @@ if (GTEST_EXTERNAL_SET_INCLUDE_DIR AND
     GTEST_EXTERNAL_SET_LIBRARY AND
     GMOCK_EXTERNAL_SET_LIBRARY AND
     GTEST_EXTERNAL_SET_MAIN_LIBRARY AND
-    GMOCK_EXTERNAL_SET_MAIN_LIBRARY AND
-    GTEST_AND_GMOCK_EXTERNAL_SET_DEPENDENCY)
+    GMOCK_EXTERNAL_SET_MAIN_LIBRARY)
 
     set (GTEST_INCLUDE_DIR ${GTEST_EXTERNAL_SET_INCLUDE_DIR})
     set (GMOCK_INCLUDE_DIR ${GMOCK_EXTERNAL_SET_INCLUDE_DIR})
 
-    set (_library_dependency ${GTEST_AND_GMOCK_EXTERNAL_SET_DEPENDENCY})
-
-    _import_library_from_extproject (gtest
-                                     ${GTEST_EXTERNAL_SET_LIBRARY}
-                                     ${_library_dependency})
-    _import_library_from_extproject (gmock
-                                     ${GMOCK_EXTERNAL_SET_LIBRARY}
-                                     ${_library_dependency})
-    _import_library_from_extproject (gtest_main
-                                     ${GTEST_EXTERNAL_SET_MAIN_LIBRARY}
-                                     ${_library_dependency})
-    _import_library_from_extproject (gmock_main
-                                     ${GMOCK_EXTERNAL_SET_MAIN_LIBRARY}
-                                     ${_library_dependency})
+    _import_library (gtest ${GTEST_EXTERNAL_SET_LIBRARY})
+    _import_library (gmock ${GMOCK_EXTERNAL_SET_LIBRARY})
+    _import_library (gtest_main ${GTEST_EXTERNAL_SET_MAIN_LIBRARY})
+    _import_library (gmock_main ${GMOCK_EXTERNAL_SET_MAIN_LIBRARY})
 
     set (GTEST_FOUND 1)
     set (GMOCK_FOUND 1)
@@ -132,8 +127,7 @@ endif (GTEST_EXTERNAL_SET_INCLUDE_DIR AND
        GTEST_EXTERNAL_SET_LIBRARY AND
        GMOCK_EXTERNAL_SET_LIBRARY AND
        GTEST_EXTERNAL_SET_MAIN_LIBRARY AND
-       GMOCK_EXTERNAL_SET_MAIN_LIBRARY AND
-       GTEST_AND_GMOCK_EXTERNAL_SET_DEPENDENCY)
+       GMOCK_EXTERNAL_SET_MAIN_LIBRARY)
 
 # Situation 1. Google Test and Google Mock are shipped in library form.
 # Use the libraries unless there we've been asked not to.
