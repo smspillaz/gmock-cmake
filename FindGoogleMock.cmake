@@ -74,6 +74,14 @@ option (GTEST_PREFER_SOURCE_BUILD
 option (GMOCK_PREFER_SOURCE_BUILD
         "Whether or not to prefer a source build of Google Mock." OFF)
 
+set (GMOCK_CXX_FLAGS "")
+
+if (CMAKE_CXX_COMPILER MATCHES "(^.*clang.*$)")
+
+    set (GMOCK_CXX_FLAGS "-Wno-error=unused-private-field")
+
+endif (CMAKE_CXX_COMPILER MATCHES "(^.*clang.*$)")
+
 macro (_import_library library_target location)
 
     add_library (${library_target} STATIC IMPORTED GLOBAL)
@@ -316,7 +324,9 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
     ExternalProject_Add (${EXTPROJECT_TARGET}
                          URL ${GMOCK_URL}
                          PREFIX ${GMOCK_PREFIX}
-                         INSTALL_COMMAND "")
+                         INSTALL_COMMAND ""
+                         CMAKE_ARGS
+                         -DCMAKE_CXX_FLAGS=${GMOCK_CXX_FLAGS})
 
     set (GTEST_LIBRARY gtest)
     set (GTEST_MAIN_LIBRARY gtest_main)
@@ -360,6 +370,15 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
 endif (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
+function (_override_compile_flags TARGET)
+
+    set_property (TARGET ${TARGET}
+                  APPEND_STRING
+                  PROPERTY COMPILE_FLAGS
+                  " ${GMOCK_CXX_FLAGS}")
+
+endfunction (_override_compile_flags)
+
 if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
     if (GoogleMock_FIND_REQUIRED)
@@ -375,12 +394,18 @@ else (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
         set (GTEST_LIBRARY gtest)
         set (GTEST_MAIN_LIBRARY gtest_main)
 
+        _override_compile_flags (${GTEST_LIBRARY})
+        _override_compile_flags (${GTEST_MAIN_LIBRARY})
+
     endif (GTEST_CREATED_TARGET)
 
     if (GMOCK_CREATED_TARGET)
 
         set (GMOCK_LIBRARY gmock)
         set (GMOCK_MAIN_LIBRARY gmock_main)
+
+        _override_compile_flags (${GMOCK_LIBRARY})
+        _override_compile_flags (${GMOCK_MAIN_LIBRARY})
 
     endif (GMOCK_CREATED_TARGET)
 
