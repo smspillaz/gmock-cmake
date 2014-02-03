@@ -79,6 +79,8 @@ set (GMOCK_CXX_FLAGS "")
 if (CMAKE_CXX_COMPILER MATCHES "(^.*clang.*$)")
 
     set (GMOCK_CXX_FLAGS "-Wno-error=unused-private-field")
+    set (GMOCK_CXX_FLAGS
+        "-Wno-error=missing-field-initializers ${GMOCK_CXX_FLAGS}")
 
 endif (CMAKE_CXX_COMPILER MATCHES "(^.*clang.*$)")
 
