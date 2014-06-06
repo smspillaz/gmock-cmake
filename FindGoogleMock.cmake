@@ -9,12 +9,12 @@
 # GMOCK_INCLUDE_DIR : Include directory containing gmock/gmock.h
 # GTEST_LIBRARY : Linker line for the Google Test library
 # GTEST_MAIN_LIBRARY : Linker line for the Google Test main () library.
-#                      You should only link with this libary if you do not
+#                      You should only link with this library if you do not
 #                      need to overload the testing environment with a
 #                      custom one.
 # GMOCK_LIBRARY : Linker line for the Google Mock library
 # GMOCK_MAIN_LIBRARY : Linker line for the Google Mock main () library.
-#                      You should only link with this libary if you do not
+#                      You should only link with this library if you do not
 #                      need to overload the testing environment with a
 #                      custom one.
 # GTEST_BOTH_LIBRARIES : Convenience variable containing the result of both
