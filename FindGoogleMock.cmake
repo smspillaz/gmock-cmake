@@ -94,10 +94,19 @@ endmacro (_import_library)
 
 macro (_import_library_from_extproject library_target location extproj)
 
+    # Also create a rule to "generate" the library on disk by running
+    # the external project build process. This satisfies pre-build
+    # stat generators like Ninja.
+    add_custom_command (OUTPUT ${location}
+                        DEPENDS ${extproj})
+    add_custom_target (ensure_build_of_${library_target}
+                       SOURCES ${location})
+
     _import_library (${library_target} ${location})
     set_target_properties (${library_target}
                            PROPERTIES EXTERNAL_PROJECT ${extproj})
     add_dependencies (${library_target} ${extproj})
+    add_dependencies (${library_target} ensure_build_of_${library_target})
 
 endmacro (_import_library_from_extproject)
 
