@@ -1,3 +1,6 @@
 [submodule "cmake-unit"]
 	path = cmake-unit
 	url = git://github.com/polysquare/cmake-unit
+[submodule "imported-project-utils"]
+	path = imported-project-utils
+	url = git://github.com/polysquare/cmake-imported-project-utils
