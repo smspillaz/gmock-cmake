@@ -1,2 +1,4 @@
 cmake
 ninja-build
+libgtest-dev
+google-mock

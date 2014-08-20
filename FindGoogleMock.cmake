@@ -43,14 +43,18 @@
 #
 # 1. Google Test and Google Mock are shipped as a pre-built library
 #    in which case we can use both and set the include dirs.
-# 2. Only Google Mock is shipped in source-form, including a distribution
-#    of Google Test. Both must be built and linked in.
-# 3. Google Mock is shipped as a pre-built library, but Google Test
+# 2. Google Mock is shipped as a pre-built library, but Google Test
 #    is shipped in source-form, in which case the latter must be built
 #    from source and the former linked in.
+# 3. Only Google Mock is shipped in source-form, including a distribution
+#    of Google Test. Both must be built and linked in.
 # 4. It may not be shipped or available at all, in which case, we must
 #    add an external project rule to download, configure and build it
 #    at build time. We then import the resultant library.
+#
+#    We can do this by either:
+#    a) Building using SVN
+#    b) Downloading a released version.
 #
 # The C++ One Definition Rule requires that all symbols have the same
 # definition at link time. If they do not, then multiple copies of the
@@ -66,6 +70,15 @@
 #                             Google Test.
 # GMOCK_PREFER_SOURCE_BUILD : Whether or not to prefer a source build of
 #                             Google Mock.
+# GMOCK_ALWAYS_DOWNLOAD_SOURCES : Whether to always download the Google Mock
+#                                 sources if building Google Mock, as opposed
+#                                 to using the sources shipped on the system.
+# GMOCK_DOWNLOAD_VERSION : If downloading Google Mock, which version to download
+#                          (defaults to SVN)
+# GMOCK_FORCE_UPDATE : If downloading from SVN, whether or not to run the 
+#                      update step, which is not run by default.
+
+include (GoogleMockLibraryUtils)
 
 find_package (Threads REQUIRED)
 
@@ -73,6 +86,15 @@ option (GTEST_PREFER_SOURCE_BUILD
         "Whether or not to prefer a source build of Google Test." OFF)
 option (GMOCK_PREFER_SOURCE_BUILD
         "Whether or not to prefer a source build of Google Mock." OFF)
+option (GMOCK_ALWAYS_DOWNLOAD_SOURCES
+        "Whether or not to always download the sources for Google Mock." OFF)
+
+if (GMOCK_ALWAYS_DOWNLOAD_SOURCES)
+
+  set (GTEST_PREFER_SOURCE_BUILD ON CACHE BOOL "" FORCE)
+  set (GMOCK_PREFER_SOURCE_BUILD ON CACHE BOOL "" FORCE)
+
+endif (GMOCK_ALWAYS_DOWNLOAD_SOURCES)
 
 set (GMOCK_CXX_FLAGS "")
 
@@ -83,32 +105,6 @@ if (CMAKE_CXX_COMPILER MATCHES "(^.*clang.*$)")
         "-Wno-error=missing-field-initializers ${GMOCK_CXX_FLAGS}")
 
 endif (CMAKE_CXX_COMPILER MATCHES "(^.*clang.*$)")
-
-macro (_import_library library_target location)
-
-    add_library (${library_target} STATIC IMPORTED GLOBAL)
-    set_target_properties (${library_target}
-                           PROPERTIES IMPORTED_LOCATION ${location})
-
-endmacro (_import_library)
-
-macro (_import_library_from_extproject library_target location extproj)
-
-    # Also create a rule to "generate" the library on disk by running
-    # the external project build process. This satisfies pre-build
-    # stat generators like Ninja.
-    add_custom_command (OUTPUT ${location}
-                        DEPENDS ${extproj})
-    add_custom_target (ensure_build_of_${library_target}
-                       SOURCES ${location})
-
-    _import_library (${library_target} ${location})
-    set_target_properties (${library_target}
-                           PROPERTIES EXTERNAL_PROJECT ${extproj})
-    add_dependencies (${library_target} ${extproj})
-    add_dependencies (${library_target} ensure_build_of_${library_target})
-
-endmacro (_import_library_from_extproject)
 
 # Already found, return
 if (GTEST_FOUND AND GMOCK_FOUND)
@@ -206,50 +202,7 @@ function (_find_prefix_from_base INCLUDE_BASE INCLUDE_DIR PREFIX_VAR)
 
 endfunction (_find_prefix_from_base)
 
-# Situation 2. Either we don't want to use the library forms, or
-# Google Test or Google Mock wasn't shipped in library form.
-# Try to see if Google Mock was shipped in source form and build
-# both libraries.
-if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
-
-    # Find the Google Mock include directory by
-    # searching the system paths
-    find_path (GMOCK_INCLUDE_DIR
-               gmock/gmock.h)
-
-    if (GMOCK_INCLUDE_DIR)
-
-        set (GMOCK_INCLUDE_BASE "include/")
-        _find_prefix_from_base (${GMOCK_INCLUDE_BASE}
-                                ${GMOCK_INCLUDE_DIR}
-                                GMOCK_INCLUDE_PREFIX)
-
-        find_path (GMOCK_SRC_DIR
-                   CMakeLists.txt
-                   PATHS ${GMOCK_INCLUDE_PREFIX}/src/gmock
-                   NO_DEFAULT_PATH)
-
-        if (GMOCK_SRC_DIR)
-
-            set (GMOCK_INCLUDE_DIR ${GMOCK_INCLUDE_DIR})
-            set (GTEST_INCLUDE_DIR ${GMOCK_SRC_DIR}/gtest/include)
-
-            add_subdirectory (${GMOCK_SRC_DIR}
-                              ${CMAKE_CURRENT_BINARY_DIR}/src/gmock)
-
-            set (GTEST_CREATED_TARGET TRUE)
-            set (GMOCK_CREATED_TARGET TRUE)
-
-            set (GTEST_FOUND TRUE)
-            set (GMOCK_FOUND TRUE)
-
-        endif (GMOCK_SRC_DIR)
-
-    endif (GMOCK_INCLUDE_DIR)
-
-endif (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
-
-# Situation 3. Google Mock was not shipped in source form, but Google
+# Situation 2. Google Mock was not shipped in source form, but Google
 # Test was, and it is acceptable to use Google Mock in library form.
 if (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
@@ -294,8 +247,52 @@ if (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
 endif (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
-# Situation 4. Neither was shipped in source form.
-# Set up an external project, download it and build it there.
+# Situation 3. Either we don't want to use the library forms, or
+# Google Test or Google Mock wasn't shipped in library form.
+# Try to see if Google Mock was shipped in source form and build
+# both libraries.
+if (NOT GMOCK_ALWAYS_DOWNLOAD_SOURCES)
+
+    if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
+
+        # Find the Google Mock include directory by
+        # searching the system paths
+        find_path (GMOCK_INCLUDE_DIR
+                   gmock/gmock.h)
+
+        if (GMOCK_INCLUDE_DIR)
+
+            set (GMOCK_INCLUDE_BASE "include/")
+            _find_prefix_from_base (${GMOCK_INCLUDE_BASE}
+                                    ${GMOCK_INCLUDE_DIR}
+                                    GMOCK_INCLUDE_PREFIX)
+
+            find_path (GMOCK_SRC_DIR
+                       CMakeLists.txt
+                       PATHS ${GMOCK_INCLUDE_PREFIX}/src/gmock
+                       NO_DEFAULT_PATH)
+
+            if (GMOCK_SRC_DIR)
+
+                set (GMOCK_INCLUDE_DIR ${GMOCK_INCLUDE_DIR})
+                set (GTEST_INCLUDE_DIR ${GMOCK_SRC_DIR}/gtest/include)
+
+                add_subdirectory (${GMOCK_SRC_DIR}
+                                  ${CMAKE_CURRENT_BINARY_DIR}/src/gmock)
+
+                set (GTEST_CREATED_TARGET TRUE)
+                set (GMOCK_CREATED_TARGET TRUE)
+
+                set (GTEST_FOUND TRUE)
+                set (GMOCK_FOUND TRUE)
+
+            endif (GMOCK_SRC_DIR)
+
+        endif (GMOCK_INCLUDE_DIR)
+
+    endif (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
+
+endif (NOT GMOCK_ALWAYS_DOWNLOAD_SOURCES)
 
 # Workaround for some generators setting a different output directory
 function (_get_build_directory_suffix_for_generator SUFFIX)
@@ -316,7 +313,15 @@ function (_get_build_directory_suffix_for_generator SUFFIX)
 
 endfunction (_get_build_directory_suffix_for_generator)
 
+# Situation 4. Neither was shipped in source form.
+# Set up an external project, download it and build it there.
 if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
+
+    set (GMOCK_DOWNLOAD_VERSION "SVN" CACHE STRING
+         "Version of Google Mock to download. Allowable: SVN, 1.7.0")
+    option (GMOCK_FORCE_UPDATE
+            "Force updates to Google Mock. Causes update on every build"
+            OFF)
 
     include (ExternalProject)
 
@@ -328,50 +333,99 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
     set (GMOCK_DEFAULT_BINARY_DIR ${GMOCK_SOURCE_DIR}-build)
     set (GTEST_DEFAULT_BINARY_DIR ${GMOCK_DEFAULT_BINARY_DIR}/gtest)
     set (GTEST_SOURCE_DIR ${GMOCK_SOURCE_DIR}/gtest)
-    set (GMOCK_URL "http://googlemock.googlecode.com/files/gmock-1.7.0.zip")
+
+    set (GMOCK_DOWNLOAD_OPTIONS "")
+    if (GMOCK_DOWNLOAD_VERSION STREQUAL "SVN")
+
+        set (GMOCK_SVN_URL "http://googlemock.googlecode.com/svn/trunk")
+        set (GMOCK_DOWNLOAD_OPTIONS SVN_REPOSITORY ${GMOCK_SVN_URL})
+
+        if (NOT GMOCK_FORCE_UPDATE)
+
+            set (GMOCK_DOWNLOAD_OPTIONS
+                 ${GMOCK_DOWNLOAD_OPTIONS}
+                 UPDATE_COMMAND
+                 "echo")
+
+        endif (NOT GMOCK_FORCE_UPDATE)
+
+    else (GMOCK_DOWNLOAD_VERSION STREQUAL "SVN")
+
+        set (GMOCK_ACCEPTABLE_VERSIONS "1.7.0")
+        set (GMOCK_VERSION_IS_ACCEPTABLE FALSE)
+
+        foreach (VERSION ${GMOCK_ACCEPTABLE_VERSIONS})
+
+            if (VERSION STREQUAL GMOCK_DOWNLOAD_VERSION)
+
+                set (GMOCK_VERSION_IS_ACCEPTABLE TRUE)
+
+            endif (VERSION STREQUAL GMOCK_DOWNLOAD_VERSION)
+
+        endforeach ()
+
+        if (NOT GMOCK_VERSION_IS_ACCEPTABLE)
+
+            message (FATAL_ERROR
+                     "Google Mock version number: ${GMOCK_DOWNLOAD_VERSION} "
+                     "isn't valid. Valid values are: "
+                     "${GMOCK_ACCEPTABLE_VERSIONS}")
+
+        endif (NOT GMOCK_VERSION_IS_ACCEPTABLE)
+
+        set (GMOCK_URL_BASE "http://googlemock.googlecode.com/files/gmock-")
+        set (GMOCK_DOWNLOAD_OPTIONS
+             URL ${GMOCK_URL_BASE}${GMOCK_DOWNLOAD_VERSION}.zip)
+
+    endif (GMOCK_DOWNLOAD_VERSION STREQUAL "SVN")
 
     set (EXTPROJECT_TARGET GoogleMock)
 
     ExternalProject_Add (${EXTPROJECT_TARGET}
-                         URL ${GMOCK_URL}
+                         ${GMOCK_DOWNLOAD_OPTIONS}
                          PREFIX ${GMOCK_PREFIX}
                          INSTALL_COMMAND ""
                          CMAKE_ARGS
-                         -DCMAKE_CXX_FLAGS=${GMOCK_CXX_FLAGS})
+                         -DCMAKE_CXX_FLAGS=${GMOCK_CXX_FLAGS}
+                         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
 
     set (GTEST_LIBRARY gtest)
     set (GTEST_MAIN_LIBRARY gtest_main)
     set (GMOCK_LIBRARY gmock)
     set (GMOCK_MAIN_LIBRARY gmock_main)
 
-    set (BUILD_SUFFIX)
-    _get_build_directory_suffix_for_generator (BUILD_SUFFIX)
+    set (SUFFIX)
+    polysquare_import_utils_get_build_suffix_for_generator (SUFFIX)
 
     set (GMOCK_LIBRARY_PATH
-         ${GMOCK_DEFAULT_BINARY_DIR}/${BUILD_SUFFIX}/libgmock.a)
+         ${GMOCK_DEFAULT_BINARY_DIR}/${SUFFIX}/libgmock.a)
     set (GMOCK_MAIN_LIBRARY_PATH
-         ${GMOCK_DEFAULT_BINARY_DIR}/${BUILD_SUFFIX}/libgmock_main.a)
+         ${GMOCK_DEFAULT_BINARY_DIR}/${SUFFIX}/libgmock_main.a)
     set (GTEST_LIBRARY_PATH
-         ${GTEST_DEFAULT_BINARY_DIR}/${BUILD_SUFFIX}/libgtest.a)
+         ${GTEST_DEFAULT_BINARY_DIR}/${SUFFIX}/libgtest.a)
     set (GTEST_MAIN_LIBRARY_PATH
-         ${GTEST_DEFAULT_BINARY_DIR}/${BUILD_SUFFIX}/libgtest_main.a)
+         ${GTEST_DEFAULT_BINARY_DIR}/${SUFFIX}/libgtest_main.a)
 
     set (GTEST_INCLUDE_DIR ${GTEST_SOURCE_DIR}/include)
     set (GMOCK_INCLUDE_DIR ${GMOCK_SOURCE_DIR}/include)
 
     # Tell CMake that we've imported some libraries
-    _import_library_from_extproject (${GMOCK_LIBRARY}
-                                     ${GMOCK_LIBRARY_PATH}
-                                     ${EXTPROJECT_TARGET})
-    _import_library_from_extproject (${GMOCK_MAIN_LIBRARY}
-                                     ${GMOCK_MAIN_LIBRARY_PATH}
-                                     ${EXTPROJECT_TARGET})
-    _import_library_from_extproject (${GTEST_LIBRARY}
-                                     ${GTEST_LIBRARY_PATH}
-                                     ${EXTPROJECT_TARGET})
-    _import_library_from_extproject (${GTEST_MAIN_LIBRARY}
-                                     ${GTEST_MAIN_LIBRARY_PATH}
-                                     ${EXTPROJECT_TARGET})
+    polysquare_import_utils_library_from_extproject (${GMOCK_LIBRARY}
+                                                     STATIC
+                                                     ${GMOCK_LIBRARY_PATH}
+                                                     ${EXTPROJECT_TARGET})
+    polysquare_import_utils_library_from_extproject (${GMOCK_MAIN_LIBRARY}
+                                                     STATIC
+                                                     ${GMOCK_MAIN_LIBRARY_PATH}
+                                                     ${EXTPROJECT_TARGET})
+    polysquare_import_utils_library_from_extproject (${GTEST_LIBRARY}
+                                                     STATIC
+                                                     ${GTEST_LIBRARY_PATH}
+                                                     ${EXTPROJECT_TARGET})
+    polysquare_import_utils_library_from_extproject (${GTEST_MAIN_LIBRARY}
+                                                     STATIC
+                                                     ${GTEST_MAIN_LIBRARY_PATH}
+                                                     ${EXTPROJECT_TARGET})
 
     # We've already set the library names here, so no need to
     # set them again later

@@ -4,26 +4,8 @@
 #
 # See LICENCE.md for Copyright information
 
-include (${GMOCK_CMAKE_TESTS_DIRECTORY}/CMakeUnit.cmake)
-
-# Workaround for some generators setting a different output directory
-function (_get_build_directory_suffix_for_generator SUFFIX)
-
-    if (GMOCK_CMAKE_GENERATOR STREQUAL "Xcode")
-
-        if (CMAKE_BUILD_TYPE)
-
-            set (${SUFFIX} ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
-
-        else (CMAKE_BUILD_TYPE)
-
-            set (${SUFFIX} "Debug" PARENT_SCOPE)
-
-        endif (CMAKE_BUILD_TYPE)
-
-    endif (GMOCK_CMAKE_GENERATOR STREQUAL "Xcode")
-
-endfunction (_get_build_directory_suffix_for_generator)
+include (${GMOCK_CMAKE_UNIT_DIRECTORY}/CMakeUnit.cmake)
+include (${GMOCK_CMAKE_TESTS_DIRECTORY}/GetBuildDirectorySuffixForGeneratorHelper.cmake)
 
 set (BUILD_SUFFIX)
 _get_build_directory_suffix_for_generator (BUILD_SUFFIX)

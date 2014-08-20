@@ -24,10 +24,13 @@ set (CMAKE_UNIT_DIRECTORY
 
 # Put our directories into the cache
 set (GMOCK_CMAKE_INITIAL_CACHE_CONTENTS
+     "set (GMOCK_CMAKE_TESTS_DIRECTORY\n"
+     "     ${GMOCK_CMAKE_DIRECTORY}/test\n"
+     "     CACHE STRING \"\" FORCE)\n"
      "set (GMOCK_CMAKE_DIRECTORY\n"
      "     ${GMOCK_CMAKE_DIRECTORY}\n"
      "     CACHE STRING \"\" FORCE)\n"
-     "set (GMOCK_CMAKE_TESTS_DIRECTORY\n"
+     "set (GMOCK_CMAKE_UNIT_DIRECTORY\n"
      "     ${CMAKE_UNIT_DIRECTORY}\n"
      "     CACHE STRING \"\" FORCE)\n"
      "set (GMOCK_CMAKE_GENERATOR\n"
@@ -45,3 +48,21 @@ bootstrap_cmake_unit (INITIAL_CACHE_CONTENTS
 
 add_cmake_build_test (GoogleMockExternalProject
                       GoogleMockExternalProjectVerify)
+add_cmake_build_test (PreferSourceBuildForGTest
+                      PreferSourceBuildForGTestVerify)
+add_cmake_build_test (PreferSourceBuildForGMock
+                      PreferSourceBuildForGMockVerify)
+add_cmake_build_test (PreferSourceBuildForBoth
+                      PreferSourceBuildForBothVerify)
+add_cmake_build_test (FromParentInExternalProject
+                      FromParentInExternalProjectVerify)
+add_cmake_build_test (AlwaysDownloadSourcesCreatesExternalProject
+                      AlwaysDownloadSourcesCreatesExternalProjectVerify)
+add_cmake_build_test (DownloadVersion170UnpacksReleaseTarball
+                      DownloadVersion170UnpacksReleaseTarballVerify)
+add_cmake_build_test (DownloadSVNRunsSVNCheckout
+                      DownloadSVNRunsSVNCheckoutVerify)
+add_cmake_build_test (DownloadSVNDoesNotUpdateByDefault
+                      DownloadSVNDoesNotUpdateByDefaultVerify)
+add_cmake_build_test (ForceUpdatesOptionAllowsUpdate
+                      ForceUpdatesOptionAllowsUpdateVerify)
