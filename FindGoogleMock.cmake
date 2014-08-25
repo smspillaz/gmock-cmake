@@ -124,10 +124,14 @@ if (GTEST_EXTERNAL_SET_INCLUDE_DIR AND
     set (GTEST_INCLUDE_DIR ${GTEST_EXTERNAL_SET_INCLUDE_DIR})
     set (GMOCK_INCLUDE_DIR ${GMOCK_EXTERNAL_SET_INCLUDE_DIR})
 
-    _import_library (gtest ${GTEST_EXTERNAL_SET_LIBRARY})
-    _import_library (gmock ${GMOCK_EXTERNAL_SET_LIBRARY})
-    _import_library (gtest_main ${GTEST_EXTERNAL_SET_MAIN_LIBRARY})
-    _import_library (gmock_main ${GMOCK_EXTERNAL_SET_MAIN_LIBRARY})
+    polysquare_import_utils_import_library (gtest STATIC
+                                            ${GTEST_EXTERNAL_SET_LIBRARY})
+    polysquare_import_utils_import_library (gmock STATIC
+                                            ${GMOCK_EXTERNAL_SET_LIBRARY})
+    polysquare_import_utils_import_library (gtest_main STATIC
+                                            ${GTEST_EXTERNAL_SET_MAIN_LIBRARY})
+    polysquare_import_utils_import_library (gmock_main STATIC
+                                            ${GMOCK_EXTERNAL_SET_MAIN_LIBRARY})
 
     set (GTEST_FOUND 1)
     set (GMOCK_FOUND 1)
