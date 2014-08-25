@@ -210,44 +210,50 @@ endfunction (_find_prefix_from_base)
 # Test was, and it is acceptable to use Google Mock in library form.
 if (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
-    # Find the the Google Test include directory
-    # by searching the system-wide include directory
-    # paths
-    find_path (GTEST_INCLUDE_DIR
-               gtest/gtest.h)
+    # Google Mock must be found in library form first, otherwise
+    # we end up calling add_subdirectory twice.
+    find_library (GMOCK_LIBRARY gmock)
+    find_library (GMOCK_MAIN_LIBRARY gmock_main)
 
-    if (GTEST_INCLUDE_DIR)
+    if (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY)
 
-        set (GTEST_INCLUDE_BASE "include/")
-        _find_prefix_from_base (${GTEST_INCLUDE_BASE}
-                                ${GTEST_INCLUDE_DIR}
-                                GTEST_INCLUDE_PREFIX)
+        # Find the the Google Test include directory
+        # by searching the system-wide include directory
+        # paths
+        find_path (GTEST_INCLUDE_DIR
+                   gtest/gtest.h)
 
-        find_path (GTEST_SRC_DIR
-                   CMakeLists.txt
-                   PATHS ${GTEST_INCLUDE_PREFIX}/src/gtest
-                   NO_DEFAULT_PATH)
+        if (GTEST_INCLUDE_DIR)
 
-        if (GTEST_SRC_DIR)
+            set (GTEST_INCLUDE_BASE "include/")
+            _find_prefix_from_base (${GTEST_INCLUDE_BASE}
+                                    ${GTEST_INCLUDE_DIR}
+                                    GTEST_INCLUDE_PREFIX)
 
-            add_subdirectory (${GTEST_SRC_DIR}
-                              ${CMAKE_CURRENT_BINARY_DIR}/src/gtest)
+            find_path (GTEST_SRC_DIR
+                       CMakeLists.txt
+                       PATHS ${GTEST_INCLUDE_PREFIX}/src/gtest
+                       NO_DEFAULT_PATH)
 
-            set (GTEST_CREATED_TARGET TRUE)
+            if (GTEST_SRC_DIR)
 
-            find_library (GMOCK_LIBRARY gmock)
-            find_library (GMOCK_MAIN_LIBRARY gmock_main)
+                message ("Adding GTest subdirectory")
+                add_subdirectory (${GTEST_SRC_DIR}
+                                  ${CMAKE_CURRENT_BINARY_DIR}/src/gtest)
 
-            if (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY)
+                set (GTEST_CREATED_TARGET TRUE)
+
+                find_library (GMOCK_LIBRARY gmock)
+                find_library (GMOCK_MAIN_LIBRARY gmock_main)
 
                 set (GTEST_FOUND TRUE)
                 set (GMOCK_FOUND TRUE)
 
-            endif (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY)
+            endif (GTEST_SRC_DIR)
 
-        endif (GTEST_SRC_DIR)
+        endif (GTEST_INCLUDE_DIR)
 
-    endif (GTEST_INCLUDE_DIR)
+    endif (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY)
 
 endif (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
@@ -281,6 +287,7 @@ if (NOT GMOCK_ALWAYS_DOWNLOAD_SOURCES)
                 set (GMOCK_INCLUDE_DIR ${GMOCK_INCLUDE_DIR})
                 set (GTEST_INCLUDE_DIR ${GMOCK_SRC_DIR}/gtest/include)
 
+                message ("adding GMock subdirectory")
                 add_subdirectory (${GMOCK_SRC_DIR}
                                   ${CMAKE_CURRENT_BINARY_DIR}/src/gmock)
 

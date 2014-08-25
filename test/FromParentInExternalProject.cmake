@@ -42,10 +42,12 @@ set (PROJECT_DEPENDENCIES)
 google_mock_get_cache_lines_and_deps_from_found (CACHE_DEFINITIONS
                                                  PROJECT_DEPENDENCIES)
 
+message ("CACHE: ${CACHE_DEFINITIONS}")
+
 ExternalProject_Add (ExternalLibraryUsingGTest
 	                 SOURCE_DIR ${EXTERNAL_PROJECT_DIRECTORY}
 	                 BINARY_DIR ${EXTERNAL_PROJECT_BINARY_DIRECTORY}
-	                 CMAKE_CACHE_ARGS ${EXTERNAL_PROJECT_CACHE_DEFINITIONS}
+	                 CMAKE_CACHE_ARGS ${CACHE_DEFINITIONS}
 	                 INSTALL_COMMAND "")
 
 add_dependencies (ExternalLibraryUsingGTest
