@@ -237,7 +237,6 @@ if (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
             if (GTEST_SRC_DIR)
 
-                message ("Adding GTest subdirectory")
                 add_subdirectory (${GTEST_SRC_DIR}
                                   ${CMAKE_CURRENT_BINARY_DIR}/src/gtest)
 
@@ -287,7 +286,6 @@ if (NOT GMOCK_ALWAYS_DOWNLOAD_SOURCES)
                 set (GMOCK_INCLUDE_DIR ${GMOCK_INCLUDE_DIR})
                 set (GTEST_INCLUDE_DIR ${GMOCK_SRC_DIR}/gtest/include)
 
-                message ("adding GMock subdirectory")
                 add_subdirectory (${GMOCK_SRC_DIR}
                                   ${CMAKE_CURRENT_BINARY_DIR}/src/gmock)
 
