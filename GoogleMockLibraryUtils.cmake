@@ -9,11 +9,11 @@ include (imported-project-utils/ImportedProjectUtils)
 
 macro (_google_mock_append_dependencies LIBRARY DEPENDENCIES)
 
-    if (TARGET ${${LIBRARY}})
+    if (TARGET ${LIBRARY})
 
-        list (APPEND ${DEPENDENCIES} ${${LIBRARY}})
+        list (APPEND ${DEPENDENCIES} ${LIBRARY})
 
-    endif (TARGET ${${LIBRARY}})
+    endif (TARGET ${LIBRARY})
 
 endmacro (_google_mock_append_dependencies)
 
@@ -21,8 +21,7 @@ macro (_google_mock_append_cache_library_path CACHE_OPTION
                                               LIBRARY
                                               CACHE_LINES)
 
-    polysquare_import_utils_get_library_location_from_variable (${LIBRARY}
-                                                                RESULT)
+    polysquare_import_utils_get_library_location (${LIBRARY} RESULT)
     polysquare_import_utils_append_cache_definition (${CACHE_OPTION}
                                                      ${RESULT}
                                                      ${CACHE_LINES})
@@ -32,11 +31,11 @@ endmacro (_google_mock_append_cache_library_path)
 macro (_google_mock_append_extproject_variables LIBRARY
                                                 CACHE_ARGUMENT_LINE
                                                 DEPENDENCIES
-                                                CACHE_OPTION)
+                                                CACHE_LINES)
 
-    _google_mock_append_cache_library_path (${CACHE_OPTION}
+    _google_mock_append_cache_library_path (${CACHE_ARGUMENT_LINE}
                                             ${LIBRARY}
-                                            ${CACHE_ARGUMENT_LINE})
+                                            ${CACHE_LINES})
     _google_mock_append_dependencies (${LIBRARY} ${DEPENDENCIES})
 
 endmacro (_google_mock_append_extproject_variables)
@@ -64,25 +63,25 @@ function (google_mock_get_cache_lines_and_deps_from_found CACHE_LINES
     set (EXTERNAL_PROJECT_CACHE_DEFINITIONS)
     set (EXTERNAL_PROJECT_DEPENDENCIES)
     polysquare_import_utils_append_cache_definition (GTEST_EXTERNAL_SET_INCLUDE_DIR
-                                                     GTEST_INCLUDE_DIR
+                                                     ${GTEST_INCLUDE_DIR}
                                                      EXTERNAL_PROJECT_CACHE_DEFINITIONS)
     polysquare_import_utils_append_cache_definition (GMOCK_EXTERNAL_SET_INCLUDE_DIR
-                                                     GMOCK_INCLUDE_DIR
+                                                     ${GMOCK_INCLUDE_DIR}
                                                      EXTERNAL_PROJECT_CACHE_DEFINITIONS)
 
-    _google_mock_append_extproject_variables (GTEST_LIBRARY
+    _google_mock_append_extproject_variables (${GTEST_LIBRARY}
                                               GTEST_EXTERNAL_SET_LIBRARY
                                               EXTERNAL_PROJECT_DEPENDENCIES
                                               EXTERNAL_PROJECT_CACHE_DEFINITIONS)
-    _google_mock_append_extproject_variables (GMOCK_LIBRARY
+    _google_mock_append_extproject_variables (${GMOCK_LIBRARY}
                                               GMOCK_EXTERNAL_SET_LIBRARY
                                               EXTERNAL_PROJECT_DEPENDENCIES
                                               EXTERNAL_PROJECT_CACHE_DEFINITIONS)
-    _google_mock_append_extproject_variables (GTEST_MAIN_LIBRARY
+    _google_mock_append_extproject_variables (${GTEST_MAIN_LIBRARY}
                                               GTEST_EXTERNAL_SET_MAIN_LIBRARY
                                               EXTERNAL_PROJECT_DEPENDENCIES
                                               EXTERNAL_PROJECT_CACHE_DEFINITIONS)
-    _google_mock_append_extproject_variables (GMOCK_MAIN_LIBRARY
+    _google_mock_append_extproject_variables (${GMOCK_MAIN_LIBRARY}
                                               GMOCK_EXTERNAL_SET_MAIN_LIBRARY
                                               EXTERNAL_PROJECT_DEPENDENCIES
                                               EXTERNAL_PROJECT_CACHE_DEFINITIONS)
