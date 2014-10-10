@@ -5,7 +5,7 @@
 #
 # See LICENCE.md for Copyright information.
 
-include (${GMOCK_CMAKE_UNIT_DIRECTORY}/CMakeUnit.cmake)
+include (CMakeUnit)
 
 set (BUILD_OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/BUILD.output)
 set (GOOGLE_MOCK_SVN_REPOSITORY "http://googlemock.googlecode.com/svn/trunk")

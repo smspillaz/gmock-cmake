@@ -5,7 +5,7 @@
 #
 # See LICENCE.md for Copyright information.
 
-include (${GMOCK_CMAKE_UNIT_DIRECTORY}/CMakeUnit.cmake)
+include (CMakeUnit)
 
 set (GMOCK_PROJECT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/__gmock)
 assert_file_exists (${GMOCK_PROJECT_DIRECTORY}/src/gmock-1.7.0.zip)

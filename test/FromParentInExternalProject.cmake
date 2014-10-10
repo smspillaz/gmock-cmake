@@ -9,11 +9,7 @@
 #
 # See LICENCE.md for Copyright information.
 
-include (${GMOCK_CMAKE_UNIT_DIRECTORY}/CMakeUnit.cmake)
-
-set (CMAKE_MODULE_PATH
-     ${GMOCK_CMAKE_DIRECTORY}
-     ${CMAKE_MODULE_PATH})
+include (CMakeUnit)
 
 set (GTEST_PREFER_SOURCE_BUILD ON CACHE BOOL "" FORCE)
 set (GMOCK_PREFER_SOURCE_BUILD ON CACHE BOOL "" FORCE)
@@ -21,11 +17,20 @@ find_package (GoogleMock REQUIRED)
 
 set (EXTERNAL_PROJECT_CMAKELISTS_TXT_CONTENT
 	 "project (External)\n"
-	 "message (\"External Set Library: \" \${GMOCK_EXTERNAL_SET_LIBRARY})\n"
-	 "cmake_minimum_required (VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})\n"
-	 "set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})\n"
-	 "find_package (GoogleMock REQUIRED)\n"
-	 "include (${GMOCK_CMAKE_TESTS_DIRECTORY}/AddSimpleGTestHelper.cmake)")
+	 "cmake_minimum_required (VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})\n")
+
+foreach (PATH ${CMAKE_MODULE_PATH})
+    set (EXTERNAL_PROJECT_CMAKELISTS_TXT_CONTENT
+         "${EXTERNAL_PROJECT_CMAKELISTS_TXT_CONTENT}"
+         "set (CMAKE_MODULE_PATH\n"
+         "     ${PATH}\n"
+         "     \${CMAKE_MODULE_PATH})\n")
+endforeach ()
+
+set (EXTERNAL_PROJECT_CMAKELISTS_TXT_CONTENT
+     "${EXTERNAL_PROJECT_CMAKELISTS_TXT_CONTENT}\n"
+     "find_package (GoogleMock REQUIRED)\n"
+	 "include (AddSimpleGTestHelper)")
 
 set (EXTERNAL_PROJECT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/External)
 set (EXTERNAL_PROJECT_BINARY_DIRECTORY ${EXTERNAL_PROJECT_DIRECTORY}/build)
@@ -41,8 +46,6 @@ set (CACHE_DEFINITIONS)
 set (PROJECT_DEPENDENCIES)
 google_mock_get_cache_lines_and_deps_from_found (CACHE_DEFINITIONS
                                                  PROJECT_DEPENDENCIES)
-
-message ("CACHE: ${CACHE_DEFINITIONS}")
 
 ExternalProject_Add (ExternalLibraryUsingGTest
 	                 SOURCE_DIR ${EXTERNAL_PROJECT_DIRECTORY}

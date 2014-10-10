@@ -4,4 +4,4 @@
 #
 # See LICENCE.md for Copyright information
 
-include (${GMOCK_CMAKE_TESTS_DIRECTORY}/GoogleMockExternalProjectVerify.cmake)
+include (GoogleMockExternalProjectVerify)

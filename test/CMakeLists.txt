@@ -18,28 +18,30 @@ set (GMOCK_RELATIVE_CMAKE_DIRECTORY
 get_filename_component (GMOCK_CMAKE_DIRECTORY
                         ${GMOCK_RELATIVE_CMAKE_DIRECTORY}
                         ABSOLUTE)
+set (GMOCK_CMAKE_TESTS_DIRECTORY
+     ${GMOCK_CMAKE_DIRECTORY}/test)
 
 set (CMAKE_UNIT_DIRECTORY
      ${GMOCK_CMAKE_DIRECTORY}/cmake-unit)
 
 # Put our directories into the cache
 set (GMOCK_CMAKE_INITIAL_CACHE_CONTENTS
-     "set (GMOCK_CMAKE_TESTS_DIRECTORY\n"
-     "     ${GMOCK_CMAKE_DIRECTORY}/test\n"
-     "     CACHE STRING \"\" FORCE)\n"
-     "set (GMOCK_CMAKE_DIRECTORY\n"
-     "     ${GMOCK_CMAKE_DIRECTORY}\n"
-     "     CACHE STRING \"\" FORCE)\n"
-     "set (GMOCK_CMAKE_UNIT_DIRECTORY\n"
-     "     ${CMAKE_UNIT_DIRECTORY}\n"
-     "     CACHE STRING \"\" FORCE)\n"
      "set (GMOCK_CMAKE_GENERATOR\n"
      "     ${CMAKE_GENERATOR}\n"
      "     CACHE STRING \"\" FORCE)\n")
 
 set (CMAKE_MODULE_PATH
      ${CMAKE_UNIT_DIRECTORY}
+     ${GMOCK_CMAKE_DIRECTORY}
+     ${GMOCK_CMAKE_TESTS_DIRECTORY}
      ${CMAKE_MODULE_PATH})
+
+foreach (PATH ${CMAKE_MODULE_PATH})
+     set (GMOCK_CMAKE_INITIAL_CACHE_CONTENTS
+          "${GMOCK_CMAKE_INITIAL_CACHE_CONTENTS}\n"
+          "set (CMAKE_MODULE_PATH ${PATH} \${CMAKE_MODULE_PATH}\n"
+          "     CACHE STRING \"\" FORCE)\n")
+endforeach ()
 
 include (CMakeUnitRunner)
 
