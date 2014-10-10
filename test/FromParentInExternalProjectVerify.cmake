@@ -5,8 +5,8 @@
 #
 # See LICENCE.md for Copyright information.
 
-include (${GMOCK_CMAKE_UNIT_DIRECTORY}/CMakeUnit.cmake)
-include (${GMOCK_CMAKE_TESTS_DIRECTORY}/GetBuildDirectorySuffixForGeneratorHelper.cmake)
+include (CMakeUnit)
+include (GetBuildDirectorySuffixForGeneratorHelper)
 
 set (BUILD_SUFFIX)
 _get_build_directory_suffix_for_generator (BUILD_SUFFIX)
