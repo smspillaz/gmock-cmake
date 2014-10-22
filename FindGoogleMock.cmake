@@ -80,6 +80,7 @@
 
 include (CheckCXXCompilerFlag)
 include (GoogleMockLibraryUtils)
+include (CheckForGoogleMockCompilerFlags)
 
 find_package (Threads REQUIRED)
 
@@ -106,9 +107,9 @@ endif (GTEST_FOUND AND GMOCK_FOUND)
 
 set (GMOCK_CXX_FLAGS "")
 
-set (GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD_FLAG "-Wno-error=unused-private-field")
+set (GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD_FLAG "-Wno-unused-private-field")
 set (GMOCK_NO_ERROR_MISSING_FIELD_INITIALIZERS_FLAG
-     "-Wno-error=missing-field-initializers")
+     "-Wno-missing-field-initializers")
 set (GMOCK_FORCE_CXX98_FLAG "-std=c++98")
 
 check_cxx_compiler_flag ("${GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD_FLAG}"
