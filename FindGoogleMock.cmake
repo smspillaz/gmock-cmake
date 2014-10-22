@@ -78,6 +78,7 @@
 # GMOCK_FORCE_UPDATE : If downloading from SVN, whether or not to run the 
 #                      update step, which is not run by default.
 
+include (CheckCXXCompilerFlag)
 include (GoogleMockLibraryUtils)
 
 find_package (Threads REQUIRED)
@@ -96,22 +97,47 @@ if (GMOCK_ALWAYS_DOWNLOAD_SOURCES)
 
 endif (GMOCK_ALWAYS_DOWNLOAD_SOURCES)
 
-set (GMOCK_CXX_FLAGS "")
-
-if (CMAKE_CXX_COMPILER MATCHES "(^.*clang.*$)")
-
-    set (GMOCK_CXX_FLAGS "-Wno-error=unused-private-field")
-    set (GMOCK_CXX_FLAGS
-        "-Wno-error=missing-field-initializers ${GMOCK_CXX_FLAGS}")
-
-endif (CMAKE_CXX_COMPILER MATCHES "(^.*clang.*$)")
-
 # Already found, return
 if (GTEST_FOUND AND GMOCK_FOUND)
 
     return ()
 
 endif (GTEST_FOUND AND GMOCK_FOUND)
+
+set (GMOCK_CXX_FLAGS "")
+
+set (GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD_FLAG "-Wno-error=unused-private-field")
+set (GMOCK_NO_ERROR_MISSING_FIELD_INITIALIZERS_FLAG
+     "-Wno-error=missing-field-initializers")
+set (GMOCK_FORCE_CXX98_FLAG "-std=c++98")
+
+check_cxx_compiler_flag ("${GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD_FLAG}"
+                         HAVE_GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD)
+check_cxx_compiler_flag ("${GMOCK_NO_ERROR_MISSING_FIELD_INITIALIZERS_FLAG}"
+                         HAVE_GMOCK_NO_ERROR_MISSING_FIELD_INITIALIZERS)
+check_cxx_compiler_flag ("${GMOCK_FORCE_CXX98_FLAG}"
+                         HAVE_GMOCK_FORCE_CXX98_FLAG)
+
+if (HAVE_GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD)
+
+    set (GMOCK_CXX_FLAGS
+         "${GMOCK_CXX_FLAGS} ${GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD_FLAG}")
+
+endif (HAVE_GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD)
+
+if (HAVE_GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD)
+
+    set (GMOCK_CXX_FLAGS
+         "${GMOCK_CXX_FLAGS} ${GMOCK_NO_ERROR_MISSING_FIELD_INITIALIZERS_FLAG}")
+
+endif (HAVE_GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD)
+
+if (HAVE_GMOCK_FORCE_CXX98_FLAG)
+
+    set (GMOCK_CXX_FLAGS
+         "${GMOCK_CXX_FLAGS} ${GMOCK_FORCE_CXX98_FLAG}")
+
+endif (HAVE_GMOCK_FORCE_CXX98_FLAG)
 
 # Situation 0. Google Test and Google Mock were provided by the user.
 if (GTEST_EXTERNAL_SET_INCLUDE_DIR AND
@@ -390,13 +416,23 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
     set (EXTPROJECT_TARGET GoogleMock)
 
+    # Backup CMAKE_CXX_FLAGS, modify it and forward it. We don't want warnings
+    # for unintialized private fields, etc.
+    set (CMAKE_CXX_FLAGS_BACKUP ${CMAKE_CXX_FLAGS})
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GMOCK_CXX_FLAGS}")
+
+    polysquare_forward_cache_namespaces (GMOCK_CACHE_DEFINITIONS
+                                         NAMESPACES CMAKE POLYSQUARE COTIRE)
+
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_BACKUP}")
+
     ExternalProject_Add (${EXTPROJECT_TARGET}
                          ${GMOCK_DOWNLOAD_OPTIONS}
                          PREFIX ${GMOCK_PREFIX}
                          INSTALL_COMMAND ""
-                         CMAKE_ARGS
-                         -DCMAKE_CXX_FLAGS=${GMOCK_CXX_FLAGS}
-                         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+                         CMAKE_CACHE_ARGS
+                         ${GMOCK_CACHE_DEFINITIONS})
+
 
     set (GTEST_LIBRARY gtest)
     set (GTEST_MAIN_LIBRARY gtest_main)

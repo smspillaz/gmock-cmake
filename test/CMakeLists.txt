@@ -24,12 +24,6 @@ set (GMOCK_CMAKE_TESTS_DIRECTORY
 set (CMAKE_UNIT_DIRECTORY
      ${GMOCK_CMAKE_DIRECTORY}/cmake-unit)
 
-# Put our directories into the cache
-set (GMOCK_CMAKE_INITIAL_CACHE_CONTENTS
-     "set (GMOCK_CMAKE_GENERATOR\n"
-     "     ${CMAKE_GENERATOR}\n"
-     "     CACHE STRING \"\" FORCE)\n")
-
 set (CMAKE_MODULE_PATH
      ${CMAKE_UNIT_DIRECTORY}
      ${GMOCK_CMAKE_DIRECTORY}
@@ -45,8 +39,8 @@ endforeach ()
 
 include (CMakeUnitRunner)
 
-bootstrap_cmake_unit (INITIAL_CACHE_CONTENTS
-                      GMOCK_CMAKE_INITIAL_CACHE_CONTENTS)
+bootstrap_cmake_unit (VARIABLES CMAKE_MODULE_PATH
+                                CMAKE_GENERATOR)
 
 add_cmake_build_test (GoogleMockExternalProject
                       GoogleMockExternalProjectVerify)
