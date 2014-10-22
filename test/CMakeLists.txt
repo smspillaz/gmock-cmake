@@ -30,16 +30,17 @@ set (CMAKE_MODULE_PATH
      ${GMOCK_CMAKE_TESTS_DIRECTORY}
      ${CMAKE_MODULE_PATH})
 
-foreach (PATH ${CMAKE_MODULE_PATH})
-     set (GMOCK_CMAKE_INITIAL_CACHE_CONTENTS
-          "${GMOCK_CMAKE_INITIAL_CACHE_CONTENTS}\n"
-          "set (CMAKE_MODULE_PATH ${PATH} \${CMAKE_MODULE_PATH}\n"
-          "     CACHE STRING \"\" FORCE)\n")
-endforeach ()
-
 include (CMakeUnitRunner)
+include (CheckForGoogleMockCompilerFlags)
 
 bootstrap_cmake_unit (VARIABLES CMAKE_MODULE_PATH
+                                CMAKE_C_COMPILER
+                                CMAKE_CXX_COMPILER
+                                CMAKE_C_FLAGS
+                                CMAKE_CXX_FLAGS
+                                HAVE_GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD
+                                HAVE_GMOCK_NO_ERROR_MISSING_FIELD_INITIALIZERS
+                                HAVE_GMOCK_FORCE_CXX98_FLAG
                                 CMAKE_GENERATOR)
 
 add_cmake_build_test (GoogleMockExternalProject
@@ -48,6 +49,12 @@ add_cmake_build_test (PreferSourceBuildForGTest
                       PreferSourceBuildForGTestVerify)
 add_cmake_build_test (PreferSourceBuildForGMock
                       PreferSourceBuildForGMockVerify)
+add_cmake_build_test (CompilerFlagsPassedForSourceBuildOfGTest
+                      CheckForCompilerFlagsVerify)
+add_cmake_build_test (CompilerFlagsPassedForSourceBuildOfGMock
+                      CheckForCompilerFlagsVerify)
+add_cmake_build_test (CompilerFlagsPassedForExternalProjectBuild
+                      CompilerFlagsPassedForExternalProjectBuildVerify)
 add_cmake_build_test (PreferSourceBuildForBoth
                       PreferSourceBuildForBothVerify)
 add_cmake_build_test (FromParentInExternalProject
