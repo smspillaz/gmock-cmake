@@ -7,5 +7,9 @@
 
 include (CMakeUnit)
 
-set (BUILD_OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/BUILD.output)
-assert_file_has_line_matching (${BUILD_OUTPUT_FILE} "^.*svn.*up.*$")
+set (METAPROJECT_BINARY_DIR
+     ${CMAKE_CURRENT_BINARY_DIR}/GoogleMock/GoogleMock-Meta/build)
+set (BUILD_METAPROJECT_OUTPUT_FILE
+     ${METAPROJECT_BINARY_DIR}/BuildMetaProjectOutput.txt)
+assert_file_has_line_matching (${BUILD_METAPROJECT_OUTPUT_FILE}
+                               "^.*svn.*up.*$")

@@ -8,7 +8,9 @@
 
 include (CMakeUnit)
 
-set (BUILD_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/BUILD.output)
+set (GMOCK_STAMP_DIR
+     ${CMAKE_CURRENT_BINARY_DIR}/GoogleMock/src/stamp)
+set (BUILD_OUTPUT ${GMOCK_STAMP_DIR}/GoogleMock-build-out.log)
 
 if (HAVE_GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD)
 

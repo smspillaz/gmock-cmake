@@ -5,10 +5,10 @@
 # See LICENCE.md for Copyright information
 
 include (CMakeUnit)
-include (GetBuildDirectorySuffixForGeneratorHelper)
+include (GetTargetLocationFromExportsHelper)
 
-set (BUILD_SUFFIX)
-_get_build_directory_suffix_for_generator (BUILD_SUFFIX)
+set (EXPORTS_FILE
+     ${CMAKE_CURRENT_BINARY_DIR}/simpletest-exports.cmake)
+get_target_location_from_exports (${EXPORTS_FILE} simple_test TEST_BINARY)
 
-set (TEST_BINARY ${CMAKE_CURRENT_BINARY_DIR}/${BUILD_SUFFIX}/simple_test)
 assert_command_executes_with_success (TEST_BINARY)
