@@ -171,32 +171,40 @@ function (_add_external_project_with_gmock_cflags PROJECT_NAME EXPORTS)
 
 endfunction (_add_external_project_with_gmock_cflags)
 
-# Situation 0. Google Test and Google Mock were provided by the user.
-if (GTEST_INCLUDE_DIR AND
-    GMOCK_INCLUDE_DIR AND
-    GTEST_LIBRARY_LOCATION AND
-    GMOCK_LIBRARY_LOCATION AND
-    GTEST_MAIN_LIBRARY_LOCATION AND
-    GMOCK_MAIN_LIBRARY_LOCATION)
+# Situation 0. Google Test and Google Mock were provided by the user. Ignore
+# any cache versions of these if we're actually just inside the same project
+# (and reconfiguring it as such)
+if (NOT _GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT)
 
-    polysquare_import_utils_import_library (GTEST_LIBRARY gtest STATIC
-                                            ${GTEST_LIBRARY_LOCATION})
-    polysquare_import_utils_import_library (GMOCK_LIBRARY gmock STATIC
-                                            ${GMOCK_LIBRARY_LOCATION})
-    polysquare_import_utils_import_library (GTEST_MAIN_LIBRARY gtest_main STATIC
-                                            ${GTEST_MAIN_LIBRARY_LOCATION})
-    polysquare_import_utils_import_library (GMOCK_MAIN_LIBRARY gmock_main STATIC
-                                            ${GMOCK_MAIN_LIBRARY_LOCATION})
+    if (GTEST_INCLUDE_DIR AND
+        GMOCK_INCLUDE_DIR AND
+        GTEST_LIBRARY_LOCATION AND
+        GMOCK_LIBRARY_LOCATION AND
+        GTEST_MAIN_LIBRARY_LOCATION AND
+        GMOCK_MAIN_LIBRARY_LOCATION)
 
-    set (GTEST_FOUND 1)
-    set (GMOCK_FOUND 1)
+        polysquare_import_utils_import_library (GTEST_LIBRARY gtest STATIC
+                                                ${GTEST_LIBRARY_LOCATION})
+        polysquare_import_utils_import_library (GMOCK_LIBRARY gmock STATIC
+                                                ${GMOCK_LIBRARY_LOCATION})
+        polysquare_import_utils_import_library (GTEST_MAIN_LIBRARY
+                                                gtest_main STATIC
+                                                ${GTEST_MAIN_LIBRARY_LOCATION})
+        polysquare_import_utils_import_library (GMOCK_MAIN_LIBRARY
+                                                gmock_main STATIC
+                                                ${GMOCK_MAIN_LIBRARY_LOCATION})
 
-endif (GTEST_INCLUDE_DIR AND
-       GMOCK_INCLUDE_DIR AND
-       GTEST_LIBRARY_LOCATION AND
-       GMOCK_LIBRARY_LOCATION AND
-       GTEST_MAIN_LIBRARY_LOCATION AND
-       GMOCK_MAIN_LIBRARY_LOCATION)
+        set (GTEST_FOUND 1)
+        set (GMOCK_FOUND 1)
+
+    endif (GTEST_INCLUDE_DIR AND
+           GMOCK_INCLUDE_DIR AND
+           GTEST_LIBRARY_LOCATION AND
+           GMOCK_LIBRARY_LOCATION AND
+           GTEST_MAIN_LIBRARY_LOCATION AND
+           GMOCK_MAIN_LIBRARY_LOCATION)
+
+endif (NOT _GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT)
 
 # Situation 1. Google Test and Google Mock are shipped in library form.
 # Use the libraries unless there we've been asked not to.
@@ -214,35 +222,48 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
         # building gmock will build both it and google-test
         if (GTEST_FOUND)
 
-            find_library (GMOCK_LIBRARY gmock)
-            find_library (GMOCK_MAIN_LIBRARY gmock_main)
+            find_library (GMOCK_LIBRARY_PATH gmock)
+            find_library (GMOCK_MAIN_LIBRARY_PATH gmock_main)
 
             # Find the Google Mock include directory by
             # searching the system paths
-            find_path (GMOCK_INCLUDE_DIR
+            find_path (GMOCK_INCLUDE_DIR_PATH
                        gmock/gmock.h)
 
-            if (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY AND GMOCK_INCLUDE_DIR)
+            if (GMOCK_LIBRARY_PATH AND
+                GMOCK_MAIN_LIBRARY_PATH AND
+                GMOCK_INCLUDE_DIR_PATH)
 
                 # Library forms are available and acceptable, we have found
                 # both Google Test and Google Mock
                 polysquare_import_utils_import_library (GTEST_LIBRARY
                                                         gtest STATIC
-                                                        ${GTEST_LIBRARY})
+                                                        ${GTEST_LIBRARY_PATH})
                 polysquare_import_utils_import_library (GMOCK_LIBRARY
                                                         gmock STATIC
-                                                        ${GMOCK_LIBRARY})
+                                                        ${GMOCK_LIBRARY_PATH})
                 polysquare_import_utils_import_library (GTEST_MAIN_LIBRARY
                                                         gtest_main STATIC
-                                                        ${GTEST_MAIN_LIBRARY})
+                                                        ${GTEST_MAIN_LIBRARY_PATH})
                 polysquare_import_utils_import_library (GMOCK_MAIN_LIBRARY
                                                         gmock_main STATIC
-                                                        ${GMOCK_MAIN_LIBRARY})
+                                                        ${GMOCK_MAIN_LIBRARY_PATH})
+
+                set (GMOCK_INCLUDE_DIR ${GMOCK_INCLUDE_DIR_PATH}
+                     CACHE FILEPATH "" FORCE)
+                set (GTEST_INCLUDE_DIR ${GTEST_INCLUDE_DIR_PATH}
+                     CACHE FILEPATH "" FORCE)
+
+                set (_GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT
+                     ON CACHE BOOL "" FORCE)
+                mark_as_advanced (_GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT)
 
                 set (GTEST_FOUND TRUE)
                 set (GMOCK_FOUND TRUE)
 
-            endif (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY AND GMOCK_INCLUDE_DIR)
+            endif (GMOCK_LIBRARY_PATH AND
+                   GMOCK_MAIN_LIBRARY_PATH AND
+                   GMOCK_INCLUDE_DIR_PATH)
 
         endif (GTEST_FOUND)
 
@@ -250,7 +271,7 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
 endif (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
-function (_find_prefix_from_base INCLUDE_BASE INCLUDE_DIR PREFIX_VAR)
+function (_gmock_find_prefix_from_base INCLUDE_BASE INCLUDE_DIR PREFIX_VAR)
 
     string (LENGTH ${INCLUDE_BASE} INCLUDE_BASE_LENGTH)
     string (LENGTH ${INCLUDE_DIR} INCLUDE_DIR_LENGTH)
@@ -266,7 +287,7 @@ function (_find_prefix_from_base INCLUDE_BASE INCLUDE_DIR PREFIX_VAR)
 
     set (${PREFIX_VAR} ${INCLUDE_PREFIX} PARENT_SCOPE)
 
-endfunction (_find_prefix_from_base)
+endfunction (_gmock_find_prefix_from_base)
 
 # Situation 2. Google Mock was not shipped in source form, but Google
 # Test was, and it is acceptable to use Google Mock in library form.
@@ -274,23 +295,23 @@ if (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
     # Google Mock must be found in library form first, otherwise
     # we end up calling add_subdirectory twice.
-    find_library (GMOCK_LIBRARY gmock)
-    find_library (GMOCK_MAIN_LIBRARY gmock_main)
+    find_library (GMOCK_LIBRARY_PATH gmock)
+    find_library (GMOCK_MAIN_LIBRARY_PATH gmock_main)
 
-    if (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY)
+    if (GMOCK_LIBRARY_PATH AND GMOCK_MAIN_LIBRARY_PATH)
 
         # Find the the Google Test include directory
         # by searching the system-wide include directory
         # paths
-        find_path (GTEST_INCLUDE_DIR
+        find_path (GTEST_INCLUDE_DIR_PATH
                    gtest/gtest.h)
 
-        if (GTEST_INCLUDE_DIR)
+        if (GTEST_INCLUDE_DIR_PATH)
 
             set (GTEST_INCLUDE_BASE "include/")
-            _find_prefix_from_base (${GTEST_INCLUDE_BASE}
-                                    ${GTEST_INCLUDE_DIR}
-                                    GTEST_INCLUDE_PREFIX)
+            _gmock_find_prefix_from_base (${GTEST_INCLUDE_BASE}
+                                          ${GTEST_INCLUDE_DIR_PATH}
+                                          GTEST_INCLUDE_PREFIX)
 
             find_path (GTEST_SRC_DIR
                        CMakeLists.txt
@@ -310,9 +331,6 @@ if (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
                                                          gtest_main
                                                          INCLUDE_DIRS)
 
-                find_library (GMOCK_LIBRARY_PATH gmock)
-                find_library (GMOCK_MAIN_LIBRARY_PATH gmock_main)
-
                 polysquare_import_utils_import_library (GMOCK_LIBRARY
                                                         gmock STATIC
                                                         ${GMOCK_LIBRARY_PATH})
@@ -320,14 +338,23 @@ if (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
                                                         gmock_main STATIC
                                                         ${GMOCK_MAIN_LIBRARY_PATH})
 
+                set (GMOCK_INCLUDE_DIR ${GMOCK_INCLUDE_DIR_PATH}
+                     CACHE FILEPATH "" FORCE)
+                set (GTEST_INCLUDE_DIR ${GTEST_INCLUDE_DIR_PATH}
+                     CACHE FILEPATH "" FORCE)
+
+                set (_GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT
+                     ON CACHE BOOL "" FORCE)
+                mark_as_advanced (_GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT)
+
                 set (GTEST_FOUND TRUE)
                 set (GMOCK_FOUND TRUE)
 
             endif (GTEST_SRC_DIR)
 
-        endif (GTEST_INCLUDE_DIR)
+        endif (GTEST_INCLUDE_DIR_PATH)
 
-    endif (GMOCK_LIBRARY AND GMOCK_MAIN_LIBRARY)
+    endif (GMOCK_LIBRARY_PATH AND GMOCK_MAIN_LIBRARY_PATH)
 
 endif (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
@@ -341,17 +368,17 @@ if (NOT GMOCK_ALWAYS_DOWNLOAD_SOURCES)
 
         # Find the Google Mock include directory by
         # searching the system paths
-        find_path (GMOCK_INCLUDE_DIR
+        find_path (GMOCK_INCLUDE_DIR_PATH
                    gmock/gmock.h)
-        find_path (GTEST_INCLUDE_DIR
+        find_path (GTEST_INCLUDE_DIR_PATH
                    gtest/gtest.h)
 
-        if (GMOCK_INCLUDE_DIR AND GTEST_INCLUDE_DIR)
+        if (GMOCK_INCLUDE_DIR_PATH AND GTEST_INCLUDE_DIR_PATH)
 
             set (GMOCK_INCLUDE_BASE "include/")
-            _find_prefix_from_base (${GMOCK_INCLUDE_BASE}
-                                    ${GMOCK_INCLUDE_DIR}
-                                    GMOCK_INCLUDE_PREFIX)
+            _gmock_find_prefix_from_base (${GMOCK_INCLUDE_BASE}
+                                          ${GMOCK_INCLUDE_DIR_PATH}
+                                          GMOCK_INCLUDE_PREFIX)
 
             find_path (GMOCK_SRC_DIR
                        CMakeLists.txt
@@ -363,9 +390,6 @@ if (NOT GMOCK_ALWAYS_DOWNLOAD_SOURCES)
                        NO_DEFAULT_PATH)
 
             if (GMOCK_SRC_DIR AND GTEST_SRC_DIR)
-
-                set (GMOCK_INCLUDE_DIR ${GMOCK_INCLUDE_DIR})
-                set (GTEST_INCLUDE_DIR ${GMOCK_SRC_DIR}/gtest/include)
 
                 # Because gmock tries to reference gtest on a relative path
                 # to itself, copy the entire build-tree into a subdirectory
@@ -390,12 +414,21 @@ if (NOT GMOCK_ALWAYS_DOWNLOAD_SOURCES)
                                                          GMOCK_MAIN_LIBRARY
                                                          gmock_main)
 
+                set (GMOCK_INCLUDE_DIR ${GMOCK_INCLUDE_DIR_PATH}
+                     CACHE FILEPATH "" FORCE)
+                set (GTEST_INCLUDE_DIR ${GTEST_INCLUDE_DIR_PATH}
+                     CACHE FILEPATH "" FORCE)
+
+                set (_GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT
+                     ON CACHE BOOL "" FORCE)
+                mark_as_advanced (_GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT)
+
                 set (GTEST_FOUND TRUE)
                 set (GMOCK_FOUND TRUE)
 
             endif (GMOCK_SRC_DIR AND GTEST_SRC_DIR)
 
-        endif (GMOCK_INCLUDE_DIR AND GTEST_INCLUDE_DIR)
+        endif (GMOCK_INCLUDE_DIR_PATH AND GTEST_INCLUDE_DIR_PATH)
 
     endif (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
@@ -471,19 +504,23 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
                                              GMOCK_INCLUDE_DIR include
                                              NAMESPACES GTEST GMOCK)
 
+    set (_GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT
+         ON CACHE BOOL "" FORCE)
+    mark_as_advanced (_GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT)
+
     set (GTEST_FOUND 1)
     set (GMOCK_FOUND 1)
 
 endif (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
-function (_override_compile_flags TARGET)
+function (_override_gmock_compile_flags TARGET)
 
     set_property (TARGET ${TARGET}
                   APPEND_STRING
                   PROPERTY COMPILE_FLAGS
                   " ${GMOCK_CXX_FLAGS}")
 
-endfunction (_override_compile_flags)
+endfunction (_override_gmock_compile_flags)
 
 if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
@@ -507,10 +544,10 @@ else (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
     # Unconditionally override compile flags. These will always
     # be on targets, so it will always be successful.
-    _override_compile_flags (${GTEST_LIBRARY})
-    _override_compile_flags (${GTEST_MAIN_LIBRARY})
-    _override_compile_flags (${GMOCK_LIBRARY})
-    _override_compile_flags (${GMOCK_MAIN_LIBRARY})
+    _override_gmock_compile_flags (${GTEST_LIBRARY})
+    _override_gmock_compile_flags (${GTEST_MAIN_LIBRARY})
+    _override_gmock_compile_flags (${GMOCK_LIBRARY})
+    _override_gmock_compile_flags (${GMOCK_MAIN_LIBRARY})
 
     if (NOT GoogleMock_FIND_QUIETLY)
 
