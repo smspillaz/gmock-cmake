@@ -3,8 +3,7 @@
 # This CMake script will search for or add an external project target
 # for both Google Test and Google Mock. It sets the following variables:
 #
-# GTEST_FOUND : Whether or not Google Test was available on the system.
-# GMOCK_FOUND : Whether or not Google Mock was available on the system.
+# GOOGLE_MOCK_FOUND: Whether Google Test and Mock were found
 # GTEST_INCLUDE_DIR : Include directory containing gtest/gtest.h
 # GMOCK_INCLUDE_DIR : Include directory containing gmock/gmock.h
 # GTEST_LIBRARY : Linker line for the Google Test library
@@ -34,12 +33,6 @@
 #    GMOCK_LIBRARY_LOCATION
 #    GTEST_MAIN_LIBRARY_LOCATION
 #    GMOCK_MAIN_LIBRARY_LOCATION
-#
-#    A parent should also provide the following variable, as a dependency
-#    to add in order to ensure that the Google Test and Google Mock
-#    libraries are available when this target is built.
-#
-#    GTEST_AND_GMOCK_DEPENDENCY
 #
 # 1. Google Test and Google Mock are shipped as a pre-built library
 #    in which case we can use both and set the include dirs.
@@ -80,8 +73,10 @@
 
 include (CheckCXXCompilerFlag)
 include (CMakeParseArguments)
-include (GoogleMockLibraryUtils)
 include (CheckForGoogleMockCompilerFlags)
+include (FindPackageHandleStandardArgs)
+include (FindPackageMessage)
+include (GoogleMockLibraryUtils)
 
 find_package (Threads REQUIRED)
 
@@ -100,11 +95,11 @@ if (GMOCK_ALWAYS_DOWNLOAD_SOURCES)
 endif (GMOCK_ALWAYS_DOWNLOAD_SOURCES)
 
 # Already found, return
-if (GMOCK_FOUND)
+if (GOOGLE_MOCK_FOUND)
 
     return ()
 
-endif (GMOCK_FOUND)
+endif (GOOGLE_MOCK_FOUND)
 
 set (GMOCK_CXX_FLAGS "")
 
@@ -605,21 +600,9 @@ function (_override_gmock_compile_flags TARGET)
 
 endfunction (_override_gmock_compile_flags)
 
-if (NOT GMOCK_FOUND)
-
-    if (GoogleMock_FIND_REQUIRED)
-
-        message (SEND_ERROR "Could not find Google Test and Google Mock")
-
-    endif (GoogleMock_FIND_REQUIRED)
-
-else (NOT GMOCK_FOUND)
+if (GMOCK_FOUND)
 
     # Set the library names as variables for other binaries to use.
-    set (GTEST_LIBRARY gtest)
-    set (GTEST_MAIN_LIBRARY gtest_main)
-    set (GMOCK_LIBRARY gmock)
-    set (GMOCK_MAIN_LIBRARY gmock_main)
     set (GTEST_BOTH_LIBRARIES
          ${CMAKE_THREAD_LIBS_INIT}
          ${GTEST_LIBRARY}
@@ -632,11 +615,17 @@ else (NOT GMOCK_FOUND)
     _override_gmock_compile_flags (${GMOCK_LIBRARY})
     _override_gmock_compile_flags (${GMOCK_MAIN_LIBRARY})
 
-    if (NOT GoogleMock_FIND_QUIETLY)
+endif (GMOCK_FOUND)
 
-        message (STATUS
-                 "Google Test and Google Mock Found ${GMOCK_FOUND_WHERE}")
-
-    endif (NOT GoogleMock_FIND_QUIETLY)
-
-endif (NOT GMOCK_FOUND)
+find_package_handle_standard_args (GoogleMock
+                                   REQUIRED_VARS
+                                   GMOCK_FOUND
+                                   GTEST_LIBRARY
+                                   GTEST_MAIN_LIBRARY
+                                   GMOCK_LIBRARY
+                                   GMOCK_MAIN_LIBRARY
+                                   GTEST_INCLUDE_DIR
+                                   GMOCK_INCLUDE_DIR)
+find_package_message (GoogleMock
+                      "Google Test and Google Mock Found ${GMOCK_FOUND_WHERE}"
+                      "[${GTEST_LIBRARY}][${GMOCK_LIBRARY}]")
