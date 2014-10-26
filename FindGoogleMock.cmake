@@ -28,18 +28,18 @@
 #    and have provided us with the relevant paths in the form of
 #    the following options:
 #
-#    GTEST_EXTERNAL_SET_INCLUDE_DIR
-#    GMOCK_EXTERNAL_SET_INCLUDE_DIR
-#    GTEST_EXTERNAL_SET_LIBRARY
-#    GMOCK_EXTERNAL_SET_LIBRARY
-#    GTEST_EXTERNAL_SET_MAIN_LIBRARY
-#    GMOCK_EXTERNAL_SET_MAIN_LIBRARY
+#    GTEST_INCLUDE_DIR
+#    GMOCK_INCLUDE_DIR
+#    GTEST_LIBRARY_LOCATION
+#    GMOCK_LIBRARY_LOCATION
+#    GTEST_MAIN_LIBRARY_LOCATION
+#    GMOCK_MAIN_LIBRARY_LOCATION
 #
 #    A parent should also provide the following variable, as a dependency
 #    to add in order to ensure that the Google Test and Google Mock
 #    libraries are available when this target is built.
 #
-#    GTEST_AND_GMOCK_EXTERNAL_SET_DEPENDENCY
+#    GTEST_AND_GMOCK_DEPENDENCY
 #
 # 1. Google Test and Google Mock are shipped as a pre-built library
 #    in which case we can use both and set the include dirs.
@@ -79,6 +79,7 @@
 #                      update step, which is not run by default.
 
 include (CheckCXXCompilerFlag)
+include (CMakeParseArguments)
 include (GoogleMockLibraryUtils)
 include (CheckForGoogleMockCompilerFlags)
 
@@ -140,40 +141,62 @@ if (HAVE_GMOCK_FORCE_CXX98_FLAG)
 
 endif (HAVE_GMOCK_FORCE_CXX98_FLAG)
 
+function (_add_external_project_with_gmock_cflags PROJECT_NAME EXPORTS)
+
+    set (ADD_WITH_FLAGS_MULTIVAR_ARGS OPTIONS TARGETS INCLUDE_DIRS NAMESPACES)
+
+    cmake_parse_arguments (ADD_WITH_FLAGS
+                           ""
+                           ""
+                           "${ADD_WITH_FLAGS_MULTIVAR_ARGS}"
+                           ${ARGN})
+
+    # Backup CMAKE_CXX_FLAGS, modify it and forward it. We don't want warnings
+    # for unintialized private fields, etc.
+    set (CMAKE_CXX_FLAGS_BACKUP ${CMAKE_CXX_FLAGS})
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GMOCK_CXX_FLAGS}")
+
+    polysquare_import_external_project (${PROJECT_NAME} gmock-exports
+                                        OPTIONS
+                                        ${ADD_WITH_FLAGS_OPTIONS}
+                                        TARGETS
+                                        ${ADD_WITH_FLAGS_TARGETS}
+                                        INCLUDE_DIRS
+                                        ${ADD_WITH_FLAGS_INCLUDE_DIRS}
+                                        NAMESPACES
+                                        ${ADD_WITH_FLAGS_NAMESPACES}
+                                        GENERATE_EXPORTS)
+
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_BACKUP}")
+
+endfunction (_add_external_project_with_gmock_cflags)
+
 # Situation 0. Google Test and Google Mock were provided by the user.
-if (GTEST_EXTERNAL_SET_INCLUDE_DIR AND
-    GMOCK_EXTERNAL_SET_INCLUDE_DIR AND
-    GTEST_EXTERNAL_SET_LIBRARY AND
-    GMOCK_EXTERNAL_SET_LIBRARY AND
-    GTEST_EXTERNAL_SET_MAIN_LIBRARY AND
-    GMOCK_EXTERNAL_SET_MAIN_LIBRARY)
+if (GTEST_INCLUDE_DIR AND
+    GMOCK_INCLUDE_DIR AND
+    GTEST_LIBRARY_LOCATION AND
+    GMOCK_LIBRARY_LOCATION AND
+    GTEST_MAIN_LIBRARY_LOCATION AND
+    GMOCK_MAIN_LIBRARY_LOCATION)
 
-    set (GTEST_INCLUDE_DIR ${GTEST_EXTERNAL_SET_INCLUDE_DIR})
-    set (GMOCK_INCLUDE_DIR ${GMOCK_EXTERNAL_SET_INCLUDE_DIR})
-
-    polysquare_import_utils_import_library (gtest STATIC
-                                            ${GTEST_EXTERNAL_SET_LIBRARY})
-    polysquare_import_utils_import_library (gmock STATIC
-                                            ${GMOCK_EXTERNAL_SET_LIBRARY})
-    polysquare_import_utils_import_library (gtest_main STATIC
-                                            ${GTEST_EXTERNAL_SET_MAIN_LIBRARY})
-    polysquare_import_utils_import_library (gmock_main STATIC
-                                            ${GMOCK_EXTERNAL_SET_MAIN_LIBRARY})
+    polysquare_import_utils_import_library (GTEST_LIBRARY gtest STATIC
+                                            ${GTEST_LIBRARY_LOCATION})
+    polysquare_import_utils_import_library (GMOCK_LIBRARY gmock STATIC
+                                            ${GMOCK_LIBRARY_LOCATION})
+    polysquare_import_utils_import_library (GTEST_MAIN_LIBRARY gtest_main STATIC
+                                            ${GTEST_MAIN_LIBRARY_LOCATION})
+    polysquare_import_utils_import_library (GMOCK_MAIN_LIBRARY gmock_main STATIC
+                                            ${GMOCK_MAIN_LIBRARY_LOCATION})
 
     set (GTEST_FOUND 1)
     set (GMOCK_FOUND 1)
 
-    # We want to specify this so that the target names
-    # are re-used.
-    set (GTEST_CREATED_TARGET 1)
-    set (GMOCK_CREATED_TARGET 1)
-
-endif (GTEST_EXTERNAL_SET_INCLUDE_DIR AND
-       GMOCK_EXTERNAL_SET_INCLUDE_DIR AND
-       GTEST_EXTERNAL_SET_LIBRARY AND
-       GMOCK_EXTERNAL_SET_LIBRARY AND
-       GTEST_EXTERNAL_SET_MAIN_LIBRARY AND
-       GMOCK_EXTERNAL_SET_MAIN_LIBRARY)
+endif (GTEST_INCLUDE_DIR AND
+       GMOCK_INCLUDE_DIR AND
+       GTEST_LIBRARY_LOCATION AND
+       GMOCK_LIBRARY_LOCATION AND
+       GTEST_MAIN_LIBRARY_LOCATION AND
+       GMOCK_MAIN_LIBRARY_LOCATION)
 
 # Situation 1. Google Test and Google Mock are shipped in library form.
 # Use the libraries unless there we've been asked not to.
@@ -203,6 +226,18 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
                 # Library forms are available and acceptable, we have found
                 # both Google Test and Google Mock
+                polysquare_import_utils_import_library (GTEST_LIBRARY
+                                                        gtest STATIC
+                                                        ${GTEST_LIBRARY})
+                polysquare_import_utils_import_library (GMOCK_LIBRARY
+                                                        gmock STATIC
+                                                        ${GMOCK_LIBRARY})
+                polysquare_import_utils_import_library (GTEST_MAIN_LIBRARY
+                                                        gtest_main STATIC
+                                                        ${GTEST_MAIN_LIBRARY})
+                polysquare_import_utils_import_library (GMOCK_MAIN_LIBRARY
+                                                        gmock_main STATIC
+                                                        ${GMOCK_MAIN_LIBRARY})
 
                 set (GTEST_FOUND TRUE)
                 set (GMOCK_FOUND TRUE)
@@ -264,13 +299,26 @@ if (NOT GTEST_FOUND AND NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
 
             if (GTEST_SRC_DIR)
 
-                add_subdirectory (${GTEST_SRC_DIR}
-                                  ${CMAKE_CURRENT_BINARY_DIR}/src/gtest)
+                _add_external_project_with_gmock_cflags (GoogleMock
+                                                         gtest-exports
+                                                         OPTIONS
+                                                         URL ${GTEST_SRC_DIR}
+                                                         TARGETS
+                                                         GTEST_LIBRARY
+                                                         gtest
+                                                         GTEST_MAIN_LIBRARY
+                                                         gtest_main
+                                                         INCLUDE_DIRS)
 
-                set (GTEST_CREATED_TARGET TRUE)
+                find_library (GMOCK_LIBRARY_PATH gmock)
+                find_library (GMOCK_MAIN_LIBRARY_PATH gmock_main)
 
-                find_library (GMOCK_LIBRARY gmock)
-                find_library (GMOCK_MAIN_LIBRARY gmock_main)
+                polysquare_import_utils_import_library (GMOCK_LIBRARY
+                                                        gmock STATIC
+                                                        ${GMOCK_LIBRARY_PATH})
+                polysquare_import_utils_import_library (GMOCK_MAIN_LIBRARY
+                                                        gmock_main STATIC
+                                                        ${GMOCK_MAIN_LIBRARY_PATH})
 
                 set (GTEST_FOUND TRUE)
                 set (GMOCK_FOUND TRUE)
@@ -295,8 +343,10 @@ if (NOT GMOCK_ALWAYS_DOWNLOAD_SOURCES)
         # searching the system paths
         find_path (GMOCK_INCLUDE_DIR
                    gmock/gmock.h)
+        find_path (GTEST_INCLUDE_DIR
+                   gtest/gtest.h)
 
-        if (GMOCK_INCLUDE_DIR)
+        if (GMOCK_INCLUDE_DIR AND GTEST_INCLUDE_DIR)
 
             set (GMOCK_INCLUDE_BASE "include/")
             _find_prefix_from_base (${GMOCK_INCLUDE_BASE}
@@ -307,47 +357,49 @@ if (NOT GMOCK_ALWAYS_DOWNLOAD_SOURCES)
                        CMakeLists.txt
                        PATHS ${GMOCK_INCLUDE_PREFIX}/src/gmock
                        NO_DEFAULT_PATH)
+            find_path (GTEST_SRC_DIR
+                       CMakeLists.txt
+                       PATHS ${GMOCK_INCLUDE_PREFIX}/src/gtest
+                       NO_DEFAULT_PATH)
 
-            if (GMOCK_SRC_DIR)
+            if (GMOCK_SRC_DIR AND GTEST_SRC_DIR)
 
                 set (GMOCK_INCLUDE_DIR ${GMOCK_INCLUDE_DIR})
                 set (GTEST_INCLUDE_DIR ${GMOCK_SRC_DIR}/gtest/include)
 
-                add_subdirectory (${GMOCK_SRC_DIR}
-                                  ${CMAKE_CURRENT_BINARY_DIR}/src/gmock)
+                # Because gmock tries to reference gtest on a relative path
+                # to itself, copy the entire build-tree into a subdirectory
+                set (GMOCK_TREE ${CMAKE_CURRENT_BINARY_DIR}/GoogleMock/tree)
+                file (COPY ${GMOCK_SRC_DIR} DESTINATION ${GMOCK_TREE}
+                      NO_SOURCE_PERMISSIONS)
+                file (COPY ${GTEST_SRC_DIR} DESTINATION ${GMOCK_TREE}
+                      NO_SOURCE_PERMISSIONS)
 
-                set (GTEST_CREATED_TARGET TRUE)
-                set (GMOCK_CREATED_TARGET TRUE)
+                _add_external_project_with_gmock_cflags (GoogleMock
+                                                         gmock-exports
+                                                         OPTIONS
+                                                         SOURCE_DIR
+                                                         ${GMOCK_TREE}/gmock
+                                                         TARGETS
+                                                         GTEST_LIBRARY
+                                                         gtest
+                                                         GMOCK_LIBRARY
+                                                         gmock
+                                                         GTEST_MAIN_LIBRARY
+                                                         gtest_main
+                                                         GMOCK_MAIN_LIBRARY
+                                                         gmock_main)
 
                 set (GTEST_FOUND TRUE)
                 set (GMOCK_FOUND TRUE)
 
-            endif (GMOCK_SRC_DIR)
+            endif (GMOCK_SRC_DIR AND GTEST_SRC_DIR)
 
-        endif (GMOCK_INCLUDE_DIR)
+        endif (GMOCK_INCLUDE_DIR AND GTEST_INCLUDE_DIR)
 
     endif (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
 endif (NOT GMOCK_ALWAYS_DOWNLOAD_SOURCES)
-
-# Workaround for some generators setting a different output directory
-function (_get_build_directory_suffix_for_generator SUFFIX)
-
-    if (${CMAKE_GENERATOR} STREQUAL "Xcode")
-
-        if (CMAKE_BUILD_TYPE)
-
-            set (${SUFFIX} ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
-
-        else (CMAKE_BUILD_TYPE)
-
-            set (${SUFFIX} "Debug" PARENT_SCOPE)
-
-        endif (CMAKE_BUILD_TYPE)
-
-    endif (${CMAKE_GENERATOR} STREQUAL "Xcode")
-
-endfunction (_get_build_directory_suffix_for_generator)
 
 # Situation 4. Neither was shipped in source form.
 # Set up an external project, download it and build it there.
@@ -358,17 +410,6 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
     option (GMOCK_FORCE_UPDATE
             "Force updates to Google Mock. Causes update on every build"
             OFF)
-
-    include (ExternalProject)
-
-    set (BIN_DIR ${CMAKE_CURRENT_BINARY_DIR})
-
-    set (GMOCK_EXT_PROJECT_NAME GoogleMock)
-    set (GMOCK_PREFIX ${BIN_DIR}/__gmock)
-    set (GMOCK_SOURCE_DIR ${GMOCK_PREFIX}/src/${GMOCK_EXT_PROJECT_NAME})
-    set (GMOCK_DEFAULT_BINARY_DIR ${GMOCK_SOURCE_DIR}-build)
-    set (GTEST_DEFAULT_BINARY_DIR ${GMOCK_DEFAULT_BINARY_DIR}/gtest)
-    set (GTEST_SOURCE_DIR ${GMOCK_SOURCE_DIR}/gtest)
 
     set (GMOCK_DOWNLOAD_OPTIONS "")
     if (GMOCK_DOWNLOAD_VERSION STREQUAL "SVN")
@@ -417,64 +458,18 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
     set (EXTPROJECT_TARGET GoogleMock)
 
-    # Backup CMAKE_CXX_FLAGS, modify it and forward it. We don't want warnings
-    # for unintialized private fields, etc.
-    set (CMAKE_CXX_FLAGS_BACKUP ${CMAKE_CXX_FLAGS})
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GMOCK_CXX_FLAGS}")
-
-    polysquare_forward_cache_namespaces (GMOCK_CACHE_DEFINITIONS
-                                         NAMESPACES CMAKE POLYSQUARE COTIRE)
-
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_BACKUP}")
-
-    ExternalProject_Add (${EXTPROJECT_TARGET}
-                         ${GMOCK_DOWNLOAD_OPTIONS}
-                         PREFIX ${GMOCK_PREFIX}
-                         INSTALL_COMMAND ""
-                         CMAKE_CACHE_ARGS
-                         ${GMOCK_CACHE_DEFINITIONS})
-
-
-    set (GTEST_LIBRARY gtest)
-    set (GTEST_MAIN_LIBRARY gtest_main)
-    set (GMOCK_LIBRARY gmock)
-    set (GMOCK_MAIN_LIBRARY gmock_main)
-
-    set (SUFFIX)
-    polysquare_import_utils_get_build_suffix_for_generator (SUFFIX)
-
-    set (GMOCK_LIBRARY_PATH
-         ${GMOCK_DEFAULT_BINARY_DIR}/${SUFFIX}/libgmock.a)
-    set (GMOCK_MAIN_LIBRARY_PATH
-         ${GMOCK_DEFAULT_BINARY_DIR}/${SUFFIX}/libgmock_main.a)
-    set (GTEST_LIBRARY_PATH
-         ${GTEST_DEFAULT_BINARY_DIR}/${SUFFIX}/libgtest.a)
-    set (GTEST_MAIN_LIBRARY_PATH
-         ${GTEST_DEFAULT_BINARY_DIR}/${SUFFIX}/libgtest_main.a)
-
-    set (GTEST_INCLUDE_DIR ${GTEST_SOURCE_DIR}/include)
-    set (GMOCK_INCLUDE_DIR ${GMOCK_SOURCE_DIR}/include)
-
-    # Tell CMake that we've imported some libraries
-    polysquare_import_utils_library_from_extproject (${GMOCK_LIBRARY}
-                                                     STATIC
-                                                     ${GMOCK_LIBRARY_PATH}
-                                                     ${EXTPROJECT_TARGET})
-    polysquare_import_utils_library_from_extproject (${GMOCK_MAIN_LIBRARY}
-                                                     STATIC
-                                                     ${GMOCK_MAIN_LIBRARY_PATH}
-                                                     ${EXTPROJECT_TARGET})
-    polysquare_import_utils_library_from_extproject (${GTEST_LIBRARY}
-                                                     STATIC
-                                                     ${GTEST_LIBRARY_PATH}
-                                                     ${EXTPROJECT_TARGET})
-    polysquare_import_utils_library_from_extproject (${GTEST_MAIN_LIBRARY}
-                                                     STATIC
-                                                     ${GTEST_MAIN_LIBRARY_PATH}
-                                                     ${EXTPROJECT_TARGET})
-
-    # We've already set the library names here, so no need to
-    # set them again later
+    _add_external_project_with_gmock_cflags (${EXTPROJECT_TARGET} gmock-exports
+                                             OPTIONS
+                                             ${GMOCK_DOWNLOAD_OPTIONS}
+                                             TARGETS
+                                             GTEST_LIBRARY gtest
+                                             GMOCK_LIBRARY gmock
+                                             GTEST_MAIN_LIBRARY gtest_main
+                                             GMOCK_MAIN_LIBRARY gmock_main
+                                             INCLUDE_DIRS
+                                             GTEST_INCLUDE_DIR gtest/include
+                                             GMOCK_INCLUDE_DIR include
+                                             NAMESPACES GTEST GMOCK)
 
     set (GTEST_FOUND 1)
     set (GMOCK_FOUND 1)
@@ -500,30 +495,22 @@ if (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
 else (NOT GTEST_FOUND OR NOT GMOCK_FOUND)
 
-    if (GTEST_CREATED_TARGET)
-
-        set (GTEST_LIBRARY gtest)
-        set (GTEST_MAIN_LIBRARY gtest_main)
-
-        _override_compile_flags (${GTEST_LIBRARY})
-        _override_compile_flags (${GTEST_MAIN_LIBRARY})
-
-    endif (GTEST_CREATED_TARGET)
-
-    if (GMOCK_CREATED_TARGET)
-
-        set (GMOCK_LIBRARY gmock)
-        set (GMOCK_MAIN_LIBRARY gmock_main)
-
-        _override_compile_flags (${GMOCK_LIBRARY})
-        _override_compile_flags (${GMOCK_MAIN_LIBRARY})
-
-    endif (GMOCK_CREATED_TARGET)
-
+    # Set the library names as variables for other binaries to use.
+    set (GTEST_LIBRARY gtest)
+    set (GTEST_MAIN_LIBRARY gtest_main)
+    set (GMOCK_LIBRARY gmock)
+    set (GMOCK_MAIN_LIBRARY gmock_main)
     set (GTEST_BOTH_LIBRARIES
          ${CMAKE_THREAD_LIBS_INIT}
          ${GTEST_LIBRARY}
          ${GTEST_MAIN_LIBRARY})
+
+    # Unconditionally override compile flags. These will always
+    # be on targets, so it will always be successful.
+    _override_compile_flags (${GTEST_LIBRARY})
+    _override_compile_flags (${GTEST_MAIN_LIBRARY})
+    _override_compile_flags (${GMOCK_LIBRARY})
+    _override_compile_flags (${GMOCK_MAIN_LIBRARY})
 
     if (NOT GoogleMock_FIND_QUIETLY)
 
