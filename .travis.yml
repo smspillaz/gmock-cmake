@@ -23,4 +23,4 @@ script:
   - cd test/build
   - cmake .. -G "${CMAKE_GENERATOR}"
   - cmake --build `pwd`
-  - ctest --output-on-failure -VV
+  - ctest --output-on-failure
