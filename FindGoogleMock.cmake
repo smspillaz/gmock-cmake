@@ -71,9 +71,8 @@
 # GMOCK_FORCE_UPDATE : If downloading from SVN, whether or not to run the 
 #                      update step, which is not run by default.
 
-include (CheckCXXCompilerFlag)
-include (CMakeParseArguments)
 include (CheckForGoogleMockCompilerFlags)
+include (CMakeParseArguments)
 include (FindPackageHandleStandardArgs)
 include (FindPackageMessage)
 include (GoogleMockLibraryUtils)
@@ -100,31 +99,6 @@ if (GOOGLE_MOCK_FOUND)
     return ()
 
 endif (GOOGLE_MOCK_FOUND)
-
-set (GMOCK_CXX_FLAGS "")
-
-set (GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD_FLAG "-Wno-unused-private-field")
-set (GMOCK_NO_ERROR_MISSING_FIELD_INITIALIZERS_FLAG
-     "-Wno-missing-field-initializers")
-set (GMOCK_FORCE_CXX98_FLAG "-std=c++98")
-
-# Adds a flag to CXXFLAGS_VARIABLE if it is supported by the current compiler.
-function (_gmock_add_cxx_flag FLAG_VARIABLE CXXFLAGS_VARIABLE)
-
-    check_cxx_compiler_flag ("${${FLAG_VARIABLE}}" HAVE_${FLAG_VARIABLE})
-    if (HAVE_${FLAG_VARIABLE})
-
-        set (${CXXFLAGS_VARIABLE}
-             "${${CXXFLAGS_VARIABLE}} ${${FLAG_VARIABLE}}" PARENT_SCOPE)
-
-    endif (HAVE_${FLAG_VARIABLE})
-
-endfunction (_gmock_add_cxx_flag)
-
-_gmock_add_cxx_flag (GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD_FLAG GMOCK_CXX_FLAGS)
-_gmock_add_cxx_flag (GMOCK_FORCE_CXX98_FLAG GMOCK_CXX_FLAGS)
-_gmock_add_cxx_flag (GMOCK_NO_ERROR_MISSING_FIELD_INITIALIZERS_FLAG
-                     GMOCK_CXX_FLAGS)
 
 # A wrapper around polysquare_import_external_project. This will cause
 # CXXFLAGS to be set as desired, but only when importing the external project.
