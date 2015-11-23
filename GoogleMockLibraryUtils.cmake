@@ -5,19 +5,19 @@
 #
 # See LICENCE.md for Copyright information.
 
-include (imported-project-utils/ImportedProjectUtils)
+include ("smspillaz/cmake-imported-project/ImportedProjectUtils")
 
-macro (_google_mock_append_dependencies LIBRARY DEPENDENCIES)
+macro (_gmock_append_dependencies LIBRARY DEPENDENCIES)
 
     if (TARGET ${LIBRARY})
 
         list (APPEND ${DEPENDENCIES} ${LIBRARY})
 
-    endif (TARGET ${LIBRARY})
+    endif ()
 
-endmacro (_google_mock_append_dependencies)
+endmacro ()
 
-function (google_mock_get_forward_variables DEPENDENCIES_RETURN
+function (gmock_get_forward_variables DEPENDENCIES_RETURN
                                             NAMESPACES_RETURN)
 
     set (LIBRARIES_TO_DEPEND_ON
@@ -31,11 +31,11 @@ function (google_mock_get_forward_variables DEPENDENCIES_RETURN
         if (NOT DEFINED ${LIBRARY})
 
             message (FATAL_ERROR "${LIBRARY} must be defined. Have you called "
-                                 "find_package (GoogleMock) yet?")
+                                 "find_package (GMOCK) yet?")
 
-        endif (NOT DEFINED ${LIBRARY})
+        endif ()
 
-        _google_mock_append_dependencies (${${LIBRARY}} DEPENDENCIES)
+        _gmock_append_dependencies (${${LIBRARY}} DEPENDENCIES)
 
     endforeach ()
 
@@ -47,4 +47,4 @@ function (google_mock_get_forward_variables DEPENDENCIES_RETURN
          ${DEPENDENCIES}
          PARENT_SCOPE)
 
-endfunction (google_mock_get_forward_variables)
+endfunction ()
