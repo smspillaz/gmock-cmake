@@ -1,26 +1,32 @@
 language: cpp
-compiler:
-  - gcc
-  - clang
+sudo: false
+cache:
+  directories:
+  - container
 env:
-  - CMAKE_GENERATOR="Unix Makefiles"
-  - CMAKE_GENERATOR="Ninja"
-before_install:
-  - git submodule update --init --recursive
-  - sudo apt-add-repository -y ppa:kalakris/cmake
-  - sudo apt-add-repository -y ppa:saiarcot895/chromium-dev
-  - sudo apt-add-repository -y ppa:smspillaz/verapp-latest
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq `cat DEPENDENCIES`
-  # Workaround to get Ninja to display verbose output
-  - if [[ $CMAKE_GENERATOR == "Ninja" ]] ; then
-     echo -e '!#/bin/bash\n/usr/bin/ninja -v $@' > ninja;
-     chmod +x ninja;
-     export PATH=`pwd`:${PATH};
-    fi
+- CMAKE_GENERATOR="Unix Makefiles" CMAKE_VERSION="latest" DEPLOY="1"
+- CMAKE_GENERATOR="Ninja" CMAKE_VERSION="latest"
+- CMAKE_GENERATOR="Unix Makefiles" CMAKE_VERSION="3.0"
+- CMAKE_GENERATOR="Ninja" CMAKE_VERSION="3.0"
+- CMAKE_GENERATOR="Unix Makefiles" CMAKE_VERSION="latest" COVERAGE="--use-cmake-coverage"
+install:
+- eval $(curl -LSs --retry 100 --connect-timeout 3 public-travis-scripts.polysquare.org/bootstrap.py | python /dev/stdin -d container -s setup/bii/setup.py -e bash -p /dev/stdout --cmake-version ${CMAKE_VERSION})
 script:
-  - mkdir -p test/build
-  - cd test/build
-  - cmake .. -G "${CMAKE_GENERATOR}"
-  - cmake --build `pwd`
-  - ctest --output-on-failure
+- polysquare_run check/bii/check.py ${COVERAGE} --cmake-namespace gmock --generator "${CMAKE_GENERATOR}" --lint-exclude "*FileForCoverage.cmake" --block "smspillaz/gmock-cmake"
+before_cache:
+- polysquare_cleanup
+after_success:
+- polysquare_run coverage/cmake/coverage.py
+before_deploy:
+- polysquare_run deploy/bii/deploy.py
+deploy:
+  provider: biicode
+  skip_cleanup: true
+  user:
+    secure: LffA87hrkyh6Jm106yyDPCEWlBw4I5UGto/MBF7N6mKd2nT+3/r4VhxkADh8h5ZjQF7z0gnrX9ZEgay5Tw7WzO72lCkuEI0U9mMDwiwh3Li2nbr5p3NeOh5ghH0/NRSa3uudkX9Sk3DEyvvMLdAoiqwHb6pw1iImh8rzNgtSepw=
+  password:
+    secure: N3YIRTO8DGlxidxOWFDzfSLQa0QDp+XPvNeE17ibEsKxHMdfudt0wi21M1YYs+QOa6o7aN00o1fMTstN415Z3o5pydTgWkCDSdiuvXEqyKIO9NLAXAaGxCZqS8jNgHTgGZgI8qjCApj+664hYXxmlCkWN3YGhakBM8tT9jzGWu0=
+  on:
+    repo: polysquare/gmock-cmake
+    branch: master
+    condition: ${DEPLOY} = 1
