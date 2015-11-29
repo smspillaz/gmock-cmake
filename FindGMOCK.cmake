@@ -46,7 +46,7 @@
 #    at build time. We then import the resultant library.
 #
 #    We can do this by either:
-#    a) Building using SVN
+#    a) Building using git
 #    b) Downloading a released version.
 #
 # The C++ One Definition Rule requires that all symbols have the same
@@ -67,8 +67,8 @@
 #                                 sources if building Google Mock, as opposed
 #                                 to using the sources shipped on the system.
 # GMOCK_DOWNLOAD_VERSION : If downloading Google Mock, which version to download
-#                          (defaults to SVN)
-# GMOCK_FORCE_UPDATE : If downloading from SVN, whether or not to run the
+#                          (defaults to GIT)
+# GMOCK_FORCE_UPDATE : If downloading from GIT, whether or not to run the
 #                      update step, which is not run by default.
 #
 # See /LICENCE.md for Copyright information
@@ -507,17 +507,22 @@ endif ()
 # Set up an external project, download it and build it there.
 if (NOT GMOCK_FOUND)
 
-    set (GMOCK_DOWNLOAD_VERSION "SVN" CACHE STRING
-         "Version of Google Mock to download. Allowable: SVN, 1.7.0")
+    set (GMOCK_DOWNLOAD_VERSION "GIT" CACHE STRING
+         "Version of Google Mock to download. Allowable: GIT, 1.7.0")
     option (GMOCK_FORCE_UPDATE
             "Force updates to Google Mock. Causes update on every build"
             OFF)
 
     set (GMOCK_DOWNLOAD_OPTIONS "")
-    if (GMOCK_DOWNLOAD_VERSION STREQUAL "SVN")
+    if (GMOCK_DOWNLOAD_VERSION STREQUAL "GIT")
 
-        set (GMOCK_SVN_URL "http://googlemock.googlecode.com/svn/trunk")
-        set (GMOCK_DOWNLOAD_OPTIONS SVN_REPOSITORY ${GMOCK_SVN_URL})
+        set (GMOCK_GIT_URL "git://github.com/google/googletest")
+        set (GMOCK_DOWNLOAD_OPTIONS GIT_REPOSITORY ${GMOCK_GIT_URL})
+        set (GMOCK_INCLUDE_DIR_OPTIONS
+             GTEST_INCLUDE_DIR
+             "googletest/include"
+             GMOCK_INCLUDE_DIR
+             "googlemock/include")
 
         if (NOT GMOCK_FORCE_UPDATE)
 
@@ -552,11 +557,19 @@ if (NOT GMOCK_FOUND)
 
         endif ()
 
-        set (GMOCK_URL_BASE "http://googlemock.googlecode.com/files/gmock-")
+        set (GMOCK_URL_BASE
+             "http://googlemock.googlecode.com/files/gmock-")
         set (GMOCK_DOWNLOAD_OPTIONS
              URL ${GMOCK_URL_BASE}${GMOCK_DOWNLOAD_VERSION}.zip)
+        set (GMOCK_INCLUDE_DIR_OPTIONS
+             GTEST_INCLUDE_DIR
+             "gtest/include"
+             GMOCK_INCLUDE_DIR
+             "include")
 
     endif ()
+
+
 
     _gmock_add_external_project_with_our_cflags (GoogleMock gmock-exports
                                                  OPTIONS
@@ -567,10 +580,7 @@ if (NOT GMOCK_FOUND)
                                                  GTEST_MAIN_LIBRARY gtest_main
                                                  GMOCK_MAIN_LIBRARY gmock_main
                                                  INCLUDE_DIRS
-                                                 GTEST_INCLUDE_DIR
-                                                 "gtest/include"
-                                                 GMOCK_INCLUDE_DIR
-                                                 "include"
+                                                 ${GMOCK_INCLUDE_DIR_OPTIONS}
                                                  NAMESPACES GTEST GMOCK)
 
     _gmock_set_found ("-- downloading version ${GMOCK_DOWNLOAD_VERSION}")

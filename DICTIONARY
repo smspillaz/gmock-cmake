@@ -7,9 +7,12 @@ CMake
 cmake
 CXXFLAGS
 FindGMOCK
+gitclone
+gitupdate
 GMockTests
 GMock
 gmock
+GoogleMock
 GTest
 gtest
 INCLUDE_DIR_UPPERCASE

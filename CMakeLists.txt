@@ -61,7 +61,7 @@ endfunction ()
 
 # Checks that on setting GMOCK_DOWNLOAD_VERSION to "1.70"
 # that we download the released version of Google Mock
-# and not the SVN version.
+# and not the GIT version.
 function (gmock_test_compiler_flags_passed_for_external_project_build)
 
     cmake_unit_get_dirs (BINARY_DIR SOURCE_DIR)
@@ -126,16 +126,16 @@ function (gmock_test_compiler_flags_passed_for_source_build_of_g_test)
 
 endfunction ()
 
-# Checks that on setting GMOCK_DOWNLOAD_VERSION to "SVN"
-# we don't run "svn up" by default
-function (gmock_test_download_svn_does_not_update_by_default)
+# Checks that on setting GMOCK_DOWNLOAD_VERSION to "GIT"
+# we don't run "GoogleMock-gitupdate" by default
+function (gmock_test_download_git_does_not_update_by_default)
 
     cmake_unit_get_dirs (BINARY_DIR SOURCE_DIR)
 
     function (gmock_configure)
 
         set (GMOCK_ALWAYS_DOWNLOAD_SOURCES ON CACHE BOOL "" FORCE)
-        set (GMOCK_DOWNLOAD_VERSION "SVN" CACHE STRING "" FORCE)
+        set (GMOCK_DOWNLOAD_VERSION "GIT" CACHE STRING "" FORCE)
         find_package (GMOCK REQUIRED)
         gmock_add_simple_gtest_helper ("${BINARY_DIR}")
 
@@ -149,7 +149,7 @@ function (gmock_test_download_svn_does_not_update_by_default)
              "${METAPROJECT_BINARY_DIR}/BuildMetaProjectOutput.txt")
         cmake_unit_assert_that ("${BUILD_METAPROJECT_OUTPUT_FILE}"
                                 not file_contents any_line matches_regex
-                                "^.*svn up.*$")
+                                "^.*GoogleMock-gitupdate.*$")
 
     endfunction ()
 
@@ -159,16 +159,16 @@ function (gmock_test_download_svn_does_not_update_by_default)
 
 endfunction ()
 
-# Checks that on setting GMOCK_DOWNLOAD_VERSION to "SVN"
-# we run "svn checkout"
-function (gmock_test_download_svn_runs_svn_checkout)
+# Checks that on setting GMOCK_DOWNLOAD_VERSION to "GIT"
+# we run "GoogleMock-gitclone"
+function (gmock_test_download_git_runs_git_clone)
 
     cmake_unit_get_dirs (BINARY_DIR SOURCE_DIR)
 
     function (gmock_configure)
 
         set (GMOCK_ALWAYS_DOWNLOAD_SOURCES ON CACHE BOOL "" FORCE)
-        set (GMOCK_DOWNLOAD_VERSION "SVN" CACHE STRING "" FORCE)
+        set (GMOCK_DOWNLOAD_VERSION "GIT" CACHE STRING "" FORCE)
         find_package (GMOCK REQUIRED)
         gmock_add_simple_gtest_helper ("${BINARY_DIR}")
 
@@ -180,12 +180,10 @@ function (gmock_test_download_svn_runs_svn_checkout)
              "${BINARY_DIR}/GoogleMock/GoogleMock-Meta/build")
         set (BUILD_METAPROJECT_OUTPUT_FILE
              "${METAPROJECT_BINARY_DIR}/BuildMetaProjectOutput.txt")
-        set (GOOGLE_MOCK_SVN_REPOSITORY
-             "http://googlemock.googlecode.com/svn/trunk")
         cmake_unit_assert_that ("${BUILD_METAPROJECT_OUTPUT_FILE}" file_contents
                                 any_line
                                 matches_regex
-                                "^.*svn co.*${GOOGLE_MOCK_SVN_REPOSITORY}.*$")
+                                "^.*GoogleMock-gitclone.*")
 
     endfunction ()
 
@@ -197,7 +195,7 @@ endfunction ()
 
 # Checks that on setting GMOCK_DOWNLOAD_VERSION to "1.70"
 # that we download the released version of Google Mock
-# and not the SVN version.
+# and not the git version.
 function (gmock_test_download_version170_unpacks_release_tarball)
 
     cmake_unit_get_dirs (BINARY_DIR SOURCE_DIR)
@@ -225,8 +223,8 @@ function (gmock_test_download_version170_unpacks_release_tarball)
 
 endfunction ()
 
-# Checks that on setting GMOCK_DOWNLOAD_VERSION to "SVN"
-# and GMOCK_FORCE_UPDATE to ON that "svn up" is run.
+# Checks that on setting GMOCK_DOWNLOAD_VERSION to "GIT"
+# and GMOCK_FORCE_UPDATE to ON that "GoogleMock-gitupdate" is run.
 function (gmock_test_force_updates_option_allows_update)
 
     cmake_unit_get_dirs (BINARY_DIR SOURCE_DIR)
@@ -234,7 +232,7 @@ function (gmock_test_force_updates_option_allows_update)
     function (gmock_configure)
 
         set (GMOCK_ALWAYS_DOWNLOAD_SOURCES ON CACHE BOOL "" FORCE)
-        set (GMOCK_DOWNLOAD_VERSION "SVN" CACHE STRING "" FORCE)
+        set (GMOCK_DOWNLOAD_VERSION "GIT" CACHE STRING "" FORCE)
         set (GMOCK_FORCE_UPDATE ON CACHE BOOL "" FORCE)
         find_package (GMOCK REQUIRED)
         gmock_add_simple_gtest_helper ("${BINARY_DIR}")
@@ -250,7 +248,7 @@ function (gmock_test_force_updates_option_allows_update)
         cmake_unit_assert_that ("${BUILD_METAPROJECT_OUTPUT_FILE}" file_contents
                                 any_line
                                 matches_regex
-                                "^.*svn.*up.*$")
+                                "^.*GoogleMock-gitupdate.*$")
 
     endfunction ()
 
