@@ -123,6 +123,10 @@ function (_gmock_add_external_project_with_our_cflags PROJECT_NAME)
     set (CMAKE_CXX_FLAGS_BACKUP ${CMAKE_CXX_FLAGS})
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GMOCK_CXX_FLAGS}")
 
+    list (APPEND ADD_WITH_FLAGS_OPTIONS
+          CMAKE_ARGS
+          -Dgtest_force_shared_crt=ON)
+
     psq_import_external_project (${PROJECT_NAME} gmock-exports
                                  OPTIONS
                                  ${ADD_WITH_FLAGS_OPTIONS}
