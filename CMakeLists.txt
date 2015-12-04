@@ -370,9 +370,9 @@ function (_gmock_get_target_location_from_exports EXPORTS
     set (DETERMINE_LOCATION_CMAKELISTS_TXT_FILE
          "${DETERMINE_LOCATION_DIRECTORY}/CMakeLists.txt")
     set (DETERMINE_LOCATION_CMAKELISTS_TXT
-         "include (${EXPORTS})\n"
+         "include (\"${EXPORTS}\")\n"
          "get_property (LOCATION TARGET ${TARGET} PROPERTY LOCATION)\n"
-         "file (WRITE ${DETERMINE_LOCATION_CAPTURE} \"\${LOCATION}\")\n")
+         "file (WRITE \"${DETERMINE_LOCATION_CAPTURE}\" \"\${LOCATION}\")\n")
 
     string (REPLACE ";" ""
             DETERMINE_LOCATION_CMAKELISTS_TXT
