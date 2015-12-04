@@ -147,9 +147,20 @@ function (gmock_test_download_git_does_not_update_by_default)
              "${BINARY_DIR}/GoogleMock/GoogleMock-Meta/build")
         set (BUILD_METAPROJECT_OUTPUT_FILE
              "${METAPROJECT_BINARY_DIR}/BuildMetaProjectOutput.txt")
+
+        if ("${CMAKE_GENERATOR}" MATCHES "NMake.*|Visual.*")
+
+            set (REGEX "^.*git pull.*$")
+
+        else ()
+
+            set (REGEX "^.*GoogleMock-gitupdate.*$")
+
+        endif ()
+
         cmake_unit_assert_that ("${BUILD_METAPROJECT_OUTPUT_FILE}"
                                 not file_contents any_line matches_regex
-                                "^.*GoogleMock-gitupdate.*$")
+                                "${REGEX}")
 
     endfunction ()
 
@@ -180,10 +191,21 @@ function (gmock_test_download_git_runs_git_clone)
              "${BINARY_DIR}/GoogleMock/GoogleMock-Meta/build")
         set (BUILD_METAPROJECT_OUTPUT_FILE
              "${METAPROJECT_BINARY_DIR}/BuildMetaProjectOutput.txt")
+
+        if ("${CMAKE_GENERATOR}" MATCHES "NMake.*|Visual.*")
+
+            set (REGEX "^.*git clone.*$")
+
+        else ()
+
+            set (REGEX "^.*GoogleMock-gitclone.*$")
+
+        endif ()
+
         cmake_unit_assert_that ("${BUILD_METAPROJECT_OUTPUT_FILE}" file_contents
                                 any_line
                                 matches_regex
-                                "^.*GoogleMock-gitclone.*")
+                                "${REGEX}")
 
     endfunction ()
 
@@ -245,10 +267,21 @@ function (gmock_test_force_updates_option_allows_update)
              "${BINARY_DIR}/GoogleMock/GoogleMock-Meta/build")
         set (BUILD_METAPROJECT_OUTPUT_FILE
              "${METAPROJECT_BINARY_DIR}/BuildMetaProjectOutput.txt")
+
+        if ("${CMAKE_GENERATOR}" MATCHES "NMake.*|Visual.*")
+
+            set (REGEX "^.*Performing update step.*$")
+
+        else ()
+
+            set (REGEX "^.*GoogleMock-gitupdate.*$")
+
+        endif ()
+
         cmake_unit_assert_that ("${BUILD_METAPROJECT_OUTPUT_FILE}" file_contents
                                 any_line
                                 matches_regex
-                                "^.*GoogleMock-gitupdate.*$")
+                                "${REGEX}")
 
     endfunction ()
 
