@@ -299,7 +299,7 @@ function (gmock_test_from_parent_in_external_project)
         file (WRITE ${EXTERNAL_PROJECT_CMAKELISTS_TXT}
               ${EXTERNAL_PROJECT_CMAKELISTS_TXT_CONTENT})
         gmock_get_forward_variables (DEPENDENCIES NAMESPACES)
-        psq_import_external_project (ExternalLibraryUsingGTest
+        psq_import_external_project (ELGT
                                      extproj-exports
                                      DEPENDS
                                      ${DEPENDENCIES}
@@ -324,15 +324,32 @@ function (gmock_test_from_parent_in_external_project)
                                                  TEST_BINARY)
         cmake_unit_assert_that ("${TEST_BINARY}" executes_with_success)
         set (SUBPROJECT_STAMP_DIR
-             "${BINARY_DIR}/ExternalLibraryUsingGTest/src/stamp/")
+             "${BINARY_DIR}/ELGT/src/stamp/")
         set (SUBPROJECT_BUILD_LOG
-             "${SUBPROJECT_STAMP_DIR}/ExternalLibraryUsingGTest-build-out.log")
+             "${SUBPROJECT_STAMP_DIR}/ELGT-build-out.log")
         set (GMOCK_SUBPROJECT_BINARY_DIR
              "${BINARY_DIR}/GoogleMock/src/build")
-        set (LINKED_TO_PARENT_GTEST_REGEX
-             "^.*simple_test.*${GTEST_SUBPROJECT_BINARY_DIR}/.*gtest.*$")
-        set (LINKED_TO_PARENT_GMOCK_REGEX
-             "^.*simple_test.*${GMOCK_SUBPROJECT_BINARY_DIR}/.*gmock.*$")
+
+        if ("${CMAKE_GENERATOR}" MATCHES "NMake.*|Visual.*")
+
+            # On Windows generators the link libraries come before
+            # the library name. Its also very difficult to pass
+            # a fully-escaped string containing the build directory
+            # so just pass the non-qualified name of the directory.
+            set (LINKED_TO_PARENT_GTEST_REGEX
+                 "^.*External.*gtest.*simple_test.*$")
+            set (LINKED_TO_PARENT_GMOCK_REGEX
+                 "^.*External.*gmock.*simple_test.*$")
+
+        else ()
+
+            set (LINKED_TO_PARENT_GTEST_REGEX
+                 "^.*simple_test.*${GTEST_SUBPROJECT_BINARY_DIR}/.*gtest.*$")
+            set (LINKED_TO_PARENT_GMOCK_REGEX
+                 "^.*simple_test.*${GMOCK_SUBPROJECT_BINARY_DIR}/.*gmock.*$")
+
+        endif ()
+
         cmake_unit_assert_that (${SUBPROJECT_BUILD_LOG}
                                 file_contents
                                 any_line
