@@ -6,6 +6,7 @@ CACHE_LINES
 CMake
 cmake
 CXXFLAGS
+externalproject
 FindGMOCK
 gitclone
 gitupdate
@@ -28,6 +29,8 @@ rvalue
 stdout
 stderr
 subdirectory
+submodules
 subproject
 Travis
+UNC
 upprcase

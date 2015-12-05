@@ -84,6 +84,7 @@ include (FindPackageMessage)
 include (GoogleMockLibraryUtils)
 
 find_package (Threads REQUIRED)
+find_package (Git)
 
 option (GTEST_PREFER_SOURCE_BUILD
         OFF)
@@ -92,7 +93,7 @@ option (GMOCK_PREFER_SOURCE_BUILD
 option (GMOCK_ALWAYS_DOWNLOAD_SOURCES
         OFF)
 
-if (GMOCK_ALWAYS_DOWNLOAD_SOURCES)
+if (GMOCK_ALWAYS_DOWNLOAD_SOURCES AND GIT_FOUND)
 
     set (GTEST_PREFER_SOURCE_BUILD ON CACHE BOOL "" FORCE)
     set (GMOCK_PREFER_SOURCE_BUILD ON CACHE BOOL "" FORCE)
@@ -518,10 +519,37 @@ if (NOT GMOCK_FOUND)
             OFF)
 
     set (GMOCK_DOWNLOAD_OPTIONS "")
-    if (GMOCK_DOWNLOAD_VERSION STREQUAL "GIT")
+    if (GMOCK_DOWNLOAD_VERSION STREQUAL "GIT" AND GIT_FOUND)
 
+        # For Windows, we need to specify the git commands here,
+        # externalproject will attempt to check out submodules,
+        # which fails when drive letter substitutions are in place
+        # on Windows.
+        #
+        # Also on Windows, we are not able to add an update
+        # command, since git pull does not understand UNC
+        # paths.
         set (GMOCK_GIT_URL "git://github.com/google/googletest")
-        set (GMOCK_DOWNLOAD_OPTIONS GIT_REPOSITORY ${GMOCK_GIT_URL})
+
+        if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+
+            if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/GoogleMock")
+
+                set (GMOCK_DOWNLOAD_OPTIONS
+                     DOWNLOAD_COMMAND "${GIT_EXECUTABLE}"
+                                      clone
+                                      "${GMOCK_GIT_URL}"
+                                      GoogleMock)
+
+            endif ()
+
+        else ()
+
+            set (GMOCK_DOWNLOAD_OPTIONS
+                 GIT_REPOSITORY "${GMOCK_GIT_URL}")
+
+        endif ()
+
         set (GMOCK_INCLUDE_DIR_OPTIONS
              GTEST_INCLUDE_DIR
              "googletest/include"
@@ -532,8 +560,7 @@ if (NOT GMOCK_FOUND)
 
             set (GMOCK_DOWNLOAD_OPTIONS
                  ${GMOCK_DOWNLOAD_OPTIONS}
-                 UPDATE_COMMAND
-                 "echo")
+                 UPDATE_DISCONNECTED 1)
 
         endif ()
 

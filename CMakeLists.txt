@@ -194,7 +194,7 @@ function (gmock_test_download_git_runs_git_clone)
 
         if ("${CMAKE_GENERATOR}" MATCHES "NMake.*|Visual.*")
 
-            set (REGEX "^.*git clone.*$")
+            set (REGEX "^.*Cloning.*$")
 
         else ()
 
@@ -268,24 +268,18 @@ function (gmock_test_force_updates_option_allows_update)
         set (BUILD_METAPROJECT_OUTPUT_FILE
              "${METAPROJECT_BINARY_DIR}/BuildMetaProjectOutput.txt")
 
-        if ("${CMAKE_GENERATOR}" MATCHES "NMake.*|Visual.*")
+        set (REGEX "^.*GoogleMock-gitupdate.*$")
 
-            set (REGEX "^.*Performing update step.*$")
-
-        else ()
-
-            set (REGEX "^.*GoogleMock-gitupdate.*$")
-
-        endif ()
-
-        cmake_unit_assert_that ("${BUILD_METAPROJECT_OUTPUT_FILE}" file_contents
+        cmake_unit_assert_that ("${BUILD_METAPROJECT_OUTPUT_FILE}"
+                                file_contents
                                 any_line
                                 matches_regex
                                 "${REGEX}")
 
     endfunction ()
 
-    cmake_unit_configure_test (INVOKE_CONFIGURE OPTIONS LANGUAGES C CXX
+    cmake_unit_configure_test (PRECONFIGURE OPTIONS SKIP_SYSTEM_REGEX "Windows"
+                               INVOKE_CONFIGURE OPTIONS LANGUAGES C CXX
                                CONFIGURE COMMAND gmock_configure
                                VERIFY COMMAND gmock_verify)
 
