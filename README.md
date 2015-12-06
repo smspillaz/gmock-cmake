@@ -4,7 +4,7 @@
 
 | Travis CI (Ubuntu) | AppVeyor (Windows) | Coverage | Biicode | Licence |
 |--------------------|--------------------|----------|---------|---------|
-|[![Travis](https://img.shields.io/travis/polysquare/gmock-cmake.svg)](http://travis-ci.org/polysquare/gmock-cmake)|[![AppVeyor](https://img.shields.io/appveyor/ci/smspillaz/gmock-cmake.svg)](https://ci.appveyor.com/project/smspillaz//gmock-cmake)|[![Coveralls](https://img.shields.io/coveralls/polysquare/gmock-cmake.svg)](http://coveralls.io/polysquare/gmock-cmake)|[![Biicode](https://webapi.biicode.com/v1/badges/smspillaz/smspillaz/gmock-cmake/master)](https://www.biicode.com/smspillaz/gmock-cmake)|[![License](https://img.shields.io/github/license/polysquare/gmock-cmake.svg)](http://github.com/polysquare/gmock-cmake)|
+|[![Travis](https://img.shields.io/travis/polysquare/gmock-cmake.svg)](http://travis-ci.org/polysquare/gmock-cmake)|[![AppVeyor](https://img.shields.io/appveyor/ci/smspillaz/gmock-cmake.svg)](https://ci.appveyor.com/project/smspillaz/gmock-cmake)|[![Coveralls](https://img.shields.io/coveralls/polysquare/gmock-cmake.svg)](http://coveralls.io/github/polysquare/gmock-cmake)|[![Biicode](https://webapi.biicode.com/v1/badges/smspillaz/smspillaz/gmock-cmake/master)](https://www.biicode.com/smspillaz/gmock-cmake)|[![License](https://img.shields.io/github/license/polysquare/gmock-cmake.svg)](http://github.com/polysquare/gmock-cmake)|
 
 ## Usage
 
