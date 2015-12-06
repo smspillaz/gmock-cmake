@@ -2,7 +2,9 @@
 
 ## Status
 
-[![Travis](https://travis-ci.org/polysquare/gmock-cmake.svg?branch=master)](https://travis-ci.org/polysquare/gmock-cmake)
+| Travis CI (Ubuntu) | AppVeyor (Windows) | Coverage | Biicode | Licence |
+|--------------------|--------------------|----------|---------|---------|
+|[![Travis](https://img.shields.io/travis/polysquare/gmock-cmake.svg)](http://travis-ci.org/polysquare/gmock-cmake)|[![AppVeyor](https://img.shields.io/appveyor/ci/smspillaz/gmock-cmake.svg)](https://ci.appveyor.com/project/smspillaz//gmock-cmake)|[![Coveralls](https://img.shields.io/coveralls/polysquare/gmock-cmake.svg)](http://coveralls.io/polysquare/gmock-cmake)|[![Biicode](https://webapi.biicode.com/v1/badges/smspillaz/smspillaz/gmock-cmake/master)](https://www.biicode.com/smspillaz/gmock-cmake)|[![License](https://img.shields.io/github/license/polysquare/gmock-cmake.svg)](http://github.com/polysquare/gmock-cmake)|
 
 ## Usage
 
@@ -27,7 +29,7 @@ does do this, then it is for reasons for policy and library consistency, as well
 as build and packaging convenience.
 
 However, there are some very important
-[caveats](https://code.google.com/p/googletest/wiki/FAQ#Why_is_it_not_recommended_to_install_a_pre-compiled_copy_of_Goog)
+[caveats](https://github.com/google/googletest/blob/master/googletest/docs/FAQ.md#why-is-it-not-recommended-to-install-a-pre-compiled-copy-of-google-test-for-example-into-usrlocal)
 that should be noted. In particular, due to the operation of the One-Definition
 Rule, it isn't safe to deviate from the compiler flags that your distribution
 used to compile Google Test or Google Mock. Generally speaking, there won't be
