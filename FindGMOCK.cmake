@@ -558,9 +558,19 @@ if (NOT GMOCK_FOUND)
 
         if (NOT GMOCK_FORCE_UPDATE)
 
-            set (GMOCK_DOWNLOAD_OPTIONS
-                 ${GMOCK_DOWNLOAD_OPTIONS}
-                 UPDATE_DISCONNECTED 1)
+            if (CMAKE_VERSION VERSION_LESS "3.1.0")
+
+                set (GMOCK_DOWNLOAD_OPTIONS
+                     ${GMOCK_DOWNLOAD_OPTIONS}
+                     UPDATE_COMMAND echo "Skipping Update")
+
+            else ()
+
+                set (GMOCK_DOWNLOAD_OPTIONS
+                     ${GMOCK_DOWNLOAD_OPTIONS}
+                     UPDATE_DISCONNECTED 1)
+
+            endif ()
 
         endif ()
 
