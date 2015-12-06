@@ -577,7 +577,7 @@ set (_CURRENT_LIST_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 cmake_unit_init (NAMESPACE "gmock"
                  COVERAGE_FILES
-                 "${_CURRENT_LIST_DIR}/FindGTEST.cmake"
+                 "${_CURRENT_LIST_DIR}/FindGMOCK.cmake"
                  "${_CURRENT_LIST_DIR}/CheckForGoogleMockCompilerFlags.cmake"
                  "${_CURRENT_LIST_DIR}/GoogleMockLibraryUtils.cmake")
 
