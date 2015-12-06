@@ -16,4 +16,4 @@ macro (gmock_import_from_find_module)
 
     find_package (GMOCK ${ARGN})
 
-macro ()
+endmacro ()
