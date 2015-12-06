@@ -6,12 +6,14 @@
 #
 # See /LICENCE.md for Copyright information
 
-function (gmock_import_from_find_module)
+set (_GMOCK_IMPORT_CURRENT_LIST_DIR "${CMAKE_CURRENT_LIST_DIR}")
+
+macro (gmock_import_from_find_module)
 
     set (CMAKE_MODULE_PATH
          ${CMAKE_MODULE_PATH} # NOLINT:correctness/quotes
-         "${CMAKE_CURRENT_LIST_DIR}")
+         "${_GMOCK_IMPORT_CURRENT_LIST_DIR}")
 
     find_package (GMOCK ${ARGN})
 
-endfunction ()
+macro ()
