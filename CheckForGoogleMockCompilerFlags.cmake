@@ -1,8 +1,8 @@
-# GoogleMockLibraryUtils.cmake
+# /CheckForGoogleMockCompilerFlags.cmake
 #
 # CMake Helper library to check for some relevant compiler flags
 #
-# See LICENCE.md for Copyright information.
+# See /LICENCE.md for Copyright information
 
 include (CheckCXXCompilerFlag)
 
@@ -20,11 +20,11 @@ function (_gmock_add_cxx_flag FLAG_VARIABLE CXXFLAGS_VARIABLE)
     if (HAVE_${FLAG_VARIABLE})
 
         set (${CXXFLAGS_VARIABLE}
-             "${${CXXFLAGS_VARIABLE}} ${${FLAG_VARIABLE}}" PARENT_SCOPE)
+             PARENT_SCOPE)
 
-    endif (HAVE_${FLAG_VARIABLE})
+    endif ()
 
-endfunction (_gmock_add_cxx_flag)
+endfunction ()
 
 _gmock_add_cxx_flag (GMOCK_NO_ERROR_UNUSED_PRIVATE_FIELD_FLAG GMOCK_CXX_FLAGS)
 _gmock_add_cxx_flag (GMOCK_FORCE_CXX98_FLAG GMOCK_CXX_FLAGS)
