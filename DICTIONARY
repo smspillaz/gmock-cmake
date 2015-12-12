@@ -11,6 +11,7 @@ externalproject
 FindGMOCK
 gitclone
 gitupdate
+GMOCK_CXX_FLAGS
 GMockTests
 GMock
 gmock

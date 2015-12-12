@@ -119,14 +119,12 @@ function (_gmock_add_external_project_with_our_cflags PROJECT_NAME)
                            "${ADD_WITH_FLAGS_MULTIVAR_ARGS}"
                            ${ARGN})
 
-    # Backup CMAKE_CXX_FLAGS, modify it and forward it. We don't want warnings
-    # for uninitialized private fields, etc.
-    set (CMAKE_CXX_FLAGS_BACKUP ${CMAKE_CXX_FLAGS})
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GMOCK_CXX_FLAGS}")
-
+    # Forward GMOCK_CXX_FLAGS. We don't want warnings for uninitialized
+    # private fields, etc.
     list (APPEND ADD_WITH_FLAGS_OPTIONS
           CMAKE_ARGS
-          -Dgtest_force_shared_crt=ON)
+          -Dgtest_force_shared_crt=ON
+          "-DCMAKE_CXX_FLAGS=\"${CMAKE_CXX_FLAGS} ${GMOCK_CXX_FLAGS}\"")
 
     psq_import_external_project (${PROJECT_NAME} gmock-exports
                                  OPTIONS
@@ -138,8 +136,6 @@ function (_gmock_add_external_project_with_our_cflags PROJECT_NAME)
                                  NAMESPACES
                                  ${ADD_WITH_FLAGS_NAMESPACES}
                                  GENERATE_EXPORTS)
-
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_BACKUP}")
 
 endfunction ()
 
