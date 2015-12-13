@@ -20,6 +20,7 @@ function (_gmock_add_cxx_flag FLAG_VARIABLE CXXFLAGS_VARIABLE)
     if (HAVE_${FLAG_VARIABLE})
 
         set (${CXXFLAGS_VARIABLE}
+             "${${CXXFLAGS_VARIABLE}} ${${FLAG_VARIABLE}}"
              PARENT_SCOPE)
 
     endif ()
