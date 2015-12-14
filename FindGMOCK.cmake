@@ -341,7 +341,7 @@ function (_gmock_set_found FOUND_WHERE)
 
     endif ()
 
-    set (GMOCK_FOUND TRUE PARENT_SCOPE)
+    set (GMOCK_FOUND ON CACHE BOOL "Whether Google Mock was found" FORCE)
     set (GMOCK_FOUND_WHERE "${FOUND_WHERE}" PARENT_SCOPE)
 
 endfunction ()
