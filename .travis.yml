@@ -4,29 +4,40 @@ cache:
   directories:
   - container
 env:
-- CMAKE_GENERATOR="Unix Makefiles" CMAKE_VERSION="latest" DEPLOY="1"
-- CMAKE_GENERATOR="Ninja" CMAKE_VERSION="latest"
-- CMAKE_GENERATOR="Unix Makefiles" CMAKE_VERSION="3.0"
-- CMAKE_GENERATOR="Ninja" CMAKE_VERSION="3.0"
-- CMAKE_GENERATOR="Unix Makefiles" CMAKE_VERSION="latest" COVERAGE="--use-cmake-coverage"
+  matrix:
+  - CMAKE_GENERATOR="Unix Makefiles" CMAKE_VERSION="latest" DEPLOY="1"
+  - CMAKE_GENERATOR="Ninja" CMAKE_VERSION="latest"
+  - CMAKE_GENERATOR="Unix Makefiles" CMAKE_VERSION="3.0"
+  - CMAKE_GENERATOR="Ninja" CMAKE_VERSION="3.0"
+  - CMAKE_GENERATOR="Unix Makefiles" CMAKE_VERSION="latest" COVERAGE="--use-cmake-coverage"
+  global:
+  - secure: FNKC32OaAAV+PLiERQQzSK68znJL5/PMsyxVd6XurZU+Iciv/Ji6Z9FSmJ7eGCsVLfKI4/AJxpK40avbPBpYRuiEgQFcaaNnrdVsNQnXIZpcHkyjYD3voqUOChk9h32bZEOWvydo+5+7xyE2KRVSqpu/UsWng4uvHhKcQza1dG8=
+  - secure: f8Q8kI4rEcQygmXsnijMYfqjM3Y3ZE5jKPqs9eYAoegyhlu1M09AiUVlvq3okEpxyLTQe37FUQW1BGszXixGRIyE8p3z7UlgY8l+p+q1pnVe38mFgk1J3t0Gz8LICzHhsa/b8fVr2HcGxqpTYt2t+44p56WMxTSKngxlGbYnbFo=
+  - secure: RNJt8lT5sWXOn67VHwk6qrqBX7dihPt3ABTFietj5bOTfWiBnGQ9RsE3WIbXxv/0b0W457//KT0w9bWbV3iDrNXuvx90THIrhqEiwQwApquucIltlLJamh3Jsysy5OjBTuiIQs7hobRZ+VXBTx4y/OfvdxU+P48+DK6E9RWN8v8=
+addons:
+  apt:
+    sources:
+    - deadsnakes
+    packages:
+    - python3.4-dev
 install:
-- eval $(curl -LSs --retry 100 --connect-timeout 3 public-travis-scripts.polysquare.org/bootstrap.py | python /dev/stdin -d container -s setup/bii/setup.py -e bash -p /dev/stdout --cmake-version ${CMAKE_VERSION})
+- eval $(curl -LSs --retry 100 --connect-timeout 3 public-travis-scripts.polysquare.org/bootstrap.py
+  | python /dev/stdin -d container -s setup/conan/setup.py -e bash -p /dev/stdout
+  --cmake-version ${CMAKE_VERSION})
 script:
-- polysquare_run check/bii/check.py ${COVERAGE} --cmake-namespace gmock --generator "${CMAKE_GENERATOR}" --lint-exclude "*FileForCoverage.cmake" --block "smspillaz/gmock-cmake"
+- polysquare_run check/conan/check.py ${COVERAGE} --cmake-namespace gmock --generator
+  "${CMAKE_GENERATOR}"
 before_cache:
 - polysquare_cleanup
 after_success:
-- polysquare_run coverage/bii/coverage.py
+- polysquare_run coverage/cmake/coverage.py
 before_deploy:
-- polysquare_run deploy/bii/deploy.py
+- polysquare_run deploy/conan/before_deploy.py --package="gmock-cmake"
 deploy:
-  provider: biicode
+  provider: script
   skip_cleanup: true
-  user:
-    secure: LffA87hrkyh6Jm106yyDPCEWlBw4I5UGto/MBF7N6mKd2nT+3/r4VhxkADh8h5ZjQF7z0gnrX9ZEgay5Tw7WzO72lCkuEI0U9mMDwiwh3Li2nbr5p3NeOh5ghH0/NRSa3uudkX9Sk3DEyvvMLdAoiqwHb6pw1iImh8rzNgtSepw=
-  password:
-    secure: N3YIRTO8DGlxidxOWFDzfSLQa0QDp+XPvNeE17ibEsKxHMdfudt0wi21M1YYs+QOa6o7aN00o1fMTstN415Z3o5pydTgWkCDSdiuvXEqyKIO9NLAXAaGxCZqS8jNgHTgGZgI8qjCApj+664hYXxmlCkWN3YGhakBM8tT9jzGWu0=
+  script: "./travis-deploy"
   on:
     repo: polysquare/gmock-cmake
     branch: master
-    condition: ${DEPLOY} = 1
+    condition: "${DEPLOY} = 1"
