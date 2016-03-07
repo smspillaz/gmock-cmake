@@ -5,7 +5,7 @@
 #
 # See /LICENCE.md for Copyright information
 
-include ("smspillaz/cmake-imported-project/ImportedProjectUtils")
+include ("cmake/cmake-imported-project/ImportedProjectUtils")
 
 macro (_gmock_append_dependencies LIBRARY DEPENDENCIES)
 

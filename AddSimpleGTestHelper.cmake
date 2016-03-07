@@ -5,7 +5,7 @@
 #
 # See /LICENCE.md for Copyright information
 
-include (CMakeUnit)
+include ("cmake/cmake-unit/CMakeUnit")
 
 # Write out a simple test that we can compile with GMock
 macro (gmock_add_simple_gtest_helper BINARY_DIR)

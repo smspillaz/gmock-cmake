@@ -3,32 +3,16 @@
 # Main entry point for GMockTests tests.
 #
 # See /LICENCE.md for Copyright information
-
-if (NOT CMAKE_SCRIPT_MODE_FILE)
-
-    project (GMockTestsTest NONE)
-    set (NEW_POLICIES CMP0025 CMP0056)
-
-    foreach (POLICY ${NEW_POLICIES})
-
-        if (POLICY ${POLICY})
-
-            cmake_policy (SET ${POLICY} NEW)
-
-        endif ()
-
-    endforeach ()
-
-endif ()
+include ("${CMAKE_CURRENT_LIST_DIR}/conanbuildinfo.cmake")
+set (CMAKE_MODULE_PATH
+     "${CMAKE_CURRENT_LIST_DIR}"
+     ${CONAN_CMAKE_MODULE_PATH}  # NOLINT:correctness/quotes
+     ${CMAKE_MODULE_PATH})  # NOLINT:correctness/quotes
 
 cmake_minimum_required (VERSION 2.8)
 
-include ("smspillaz/cmake-unit/CMakeUnitRunner")
-include ("smspillaz/cmake-unit/CMakeUnit")
-
-set (CMAKE_MODULE_PATH
-     "${CMAKE_CURRENT_LIST_DIR}"
-     "${CMAKE_MODULE_PATH}")
+include ("cmake/cmake-unit/CMakeUnitRunner")
+include ("cmake/cmake-unit/CMakeUnit")
 
 include (AddSimpleGTestHelper)
 
