@@ -650,6 +650,7 @@ if (GMOCK_FOUND)
 
 endif ()
 
+set (GMOCK_FOUND ${GMOCK_FOUND} CACHE BOOL "" FORCE)
 find_package_handle_standard_args (GMOCK
                                    REQUIRED_VARS
                                    GMOCK_FOUND
@@ -662,3 +663,7 @@ find_package_handle_standard_args (GMOCK
 find_package_message (GMOCK
                       "Google Test and Google Mock Found ${GMOCK_FOUND_WHERE}"
                       "[${GTEST_LIBRARY}][${GMOCK_LIBRARY}]")
+
+set (GMOCK_FOUND_VALUE ${GMOCK_FOUND})
+unset (GMOCK_FOUND CACHE)
+set (GMOCK_FOUND ${GMOCK_FOUND_VALUE})
