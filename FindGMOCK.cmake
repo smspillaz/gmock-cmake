@@ -3,7 +3,7 @@
 # This CMake script will search for or add an external project target
 # for both Google Test and Google Mock. It sets the following variables:
 #
-# GOOGLE_MOCK_FOUND: Whether Google Test and Mock were found
+# GMOCK_FOUND: Whether Google Test and Mock were found
 # GTEST_INCLUDE_DIR : Include directory containing gtest/gtest.h
 # GMOCK_INCLUDE_DIR : Include directory containing gmock/gmock.h
 # GTEST_LIBRARY : Linker line for the Google Test library
@@ -98,12 +98,10 @@ if (GMOCK_ALWAYS_DOWNLOAD_SOURCES AND GIT_FOUND)
     set (GTEST_PREFER_SOURCE_BUILD ON CACHE BOOL "" FORCE)
     set (GMOCK_PREFER_SOURCE_BUILD ON CACHE BOOL "" FORCE)
 
-endif ()
+else ()
 
-# Already found, return
-if (GOOGLE_MOCK_FOUND)
-
-    return ()
+    set (GTEST_PREFER_SOURCE_BUILD OFF CACHE BOOL "" FORCE)
+    set (GMOCK_PREFER_SOURCE_BUILD OFF CACHE BOOL "" FORCE)
 
 endif ()
 
@@ -335,13 +333,12 @@ function (_gmock_set_found FOUND_WHERE)
 
     if (NOT GMOCK_SET_FOUND_EXTERNALLY_OVERRIDDEN)
 
-        set (_GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT
-             ON CACHE BOOL "" FORCE)
-        mark_as_advanced (_GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT)
+        set_property (GLOBAL PROPERTY _GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT
+                      ON)
 
     endif ()
 
-    set (GMOCK_FOUND ON CACHE BOOL "Whether Google Mock was found" FORCE)
+    set (GMOCK_FOUND ON PARENT_SCOPE)
     set (GMOCK_FOUND_WHERE "${FOUND_WHERE}" PARENT_SCOPE)
 
 endfunction ()
@@ -349,6 +346,9 @@ endfunction ()
 # Situation 0. Google Test and Google Mock were provided by the user. Ignore
 # any cache versions of these if we're actually just inside the same project
 # (and reconfiguring it as such)
+get_property (_GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT
+              GLOBAL PROPERTY _GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT)
+
 if (NOT _GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT)
 
     if (GTEST_INCLUDE_DIR AND
@@ -650,6 +650,7 @@ if (GMOCK_FOUND)
 
 endif ()
 
+set (GMOCK_FOUND ${GMOCK_FOUND} CACHE BOOL "" FORCE)
 find_package_handle_standard_args (GMOCK
                                    REQUIRED_VARS
                                    GMOCK_FOUND
@@ -662,3 +663,7 @@ find_package_handle_standard_args (GMOCK
 find_package_message (GMOCK
                       "Google Test and Google Mock Found ${GMOCK_FOUND_WHERE}"
                       "[${GTEST_LIBRARY}][${GMOCK_LIBRARY}]")
+
+set (GMOCK_FOUND_VALUE ${GMOCK_FOUND})
+unset (GMOCK_FOUND CACHE)
+set (GMOCK_FOUND ${GMOCK_FOUND_VALUE})
