@@ -19,6 +19,9 @@
 # GTEST_BOTH_LIBRARIES : Convenience variable containing the result of both
 #                        ${GTEST_LIBRARY} and ${GMOCK_LIBRARY} as well as any
 #                        pthread libraries required for Google Test's operation.
+# GTEST_LIBRARY_DIRS : The directory that contains the Google Test libraries.
+# GTEST_COMPILE_DEFINITIONS : Compile definitions that must be set when
+#                             including Google Test.
 #
 # There is some trickiness that comes with setting up both Google Test and
 # Google Mock. Different vendors tend to ship it in different ways.
@@ -230,12 +233,28 @@ function (_gmock_find_and_import_from_system SUCCESS_RETURN)
     # the cache
     foreach (LIBRARY_NAME ${FIND_AND_IMPORT_LIBRARIES})
 
-        _gmock_library_var_from_library_name (${LIBRARY_NAME} LIBRARY_VARIABLE)
-        psq_import_utils_import_library (${LIBRARY_VARIABLE}
-                                         ${LIBRARY_NAME}
-                                         STATIC
-                                         "${${LIBRARY_VARIABLE}_PATH}")
-        unset (${LIBRARY_VARIABLE}_PATH CACHE)
+        if (CMAKE_SYSTEM_NAME STREQUAL "Windows"
+            AND NOT GTEST_FORCE_FIND_STATIC)
+
+            # On Windows we can't link directly to the library, since building
+            # as a static library is not supported. Link to the basename of
+            # the library and make it the user's responsibility to place the
+            # library in the correct path by importing it
+            _gmock_library_var_from_library_name (${LIBRARY_NAME}
+                                                  LIBRARY_VARIABLE)
+            set (${LIBRARY_VARIABLE} ${LIBRARY_NAME} PARENT_SCOPE)
+
+        else ()
+
+            _gmock_library_var_from_library_name (${LIBRARY_NAME}
+                                                  LIBRARY_VARIABLE)
+            psq_import_utils_import_library (${LIBRARY_VARIABLE}
+                                             ${LIBRARY_NAME}
+                                             STATIC
+                                             "${${LIBRARY_VARIABLE}_PATH}")
+            unset (${LIBRARY_VARIABLE}_PATH CACHE)
+
+        endif ()
 
     endforeach ()
 
@@ -358,21 +377,58 @@ if (NOT _GMOCK_AND_GTEST_INSIDE_FINDING_PROJECT)
         GTEST_MAIN_LIBRARY_LOCATION AND
         GMOCK_MAIN_LIBRARY_LOCATION)
 
-        psq_import_utils_import_library (GTEST_LIBRARY gtest STATIC
-                                         "${GTEST_LIBRARY_LOCATION}")
-        psq_import_utils_import_library (GMOCK_LIBRARY gmock STATIC
-                                         "${GMOCK_LIBRARY_LOCATION}")
-        psq_import_utils_import_library (GTEST_MAIN_LIBRARY
-                                         gtest_main STATIC
-                                         "${GTEST_MAIN_LIBRARY_LOCATION}")
-        psq_import_utils_import_library (GMOCK_MAIN_LIBRARY
-                                         gmock_main STATIC
-                                         "${GMOCK_MAIN_LIBRARY_LOCATION}")
+        if (CMAKE_SYSTEM_NAME STREQUAL "Windows"
+            AND NOT GTEST_FORCE_FIND_STATIC)
 
-        set (LIBRARY_LOCATIONS
-             "${GTEST_LIBRARY_LOCATION} ${GMOCK_LIBRARY_LOCATION}")
-        _gmock_set_found ("-- overridden by ${LIBRARY_LOCATIONS}"
-                          EXTERNALLY_OVERRIDDEN)
+            set (GTEST_LIBRARY "gtest")
+            set (GMOCK_LIBRARY "gmock")
+            set (GTEST_MAIN_LIBRARY "gtest_main")
+            set (GMOCK_MAIN_LIBRARY "gmock_main")
+
+            set (LIBRARY_LOCATIONS
+                 "${GTEST_LIBRARY_LOCATION} ${GMOCK_LIBRARY_LOCATION}")
+
+            _gmock_set_found ("-- loading as DLLs, make sure they are in PATH")
+
+            get_filename_component (GTEST_LIBRARY_DIRECTORY
+                                    "${GTEST_LIBRARY_LOCATION}"
+                                    DIRECTORY)
+            get_filename_component (GMOCK_LIBRARY_DIRECTORY
+                                    "${GMOCK_LIBRARY_LOCATION}"
+                                    DIRECTORY)
+            get_filename_component (GTEST_MAIN_LIBRARY_DIRECTORY
+                                    "${GTEST_MAIN_LIBRARY_LOCATION}"
+                                    DIRECTORY)
+            get_filename_component (GMOCK_MAIN_LIBRARY_DIRECTORY
+                                    "${GMOCK_MAIN_LIBRARY_LOCATION}"
+                                    DIRECTORY)
+
+            set (GTEST_LIBRARY_DIRS
+                 "${GTEST_LIBRARY_DIRECTORY}"
+                 "${GMOCK_LIBRARY_DIRECTORY}"
+                 "${GTEST_MAIN_LIBRARY_DIRECTORY}"
+                 "${GMOCK_MAIN_LIBRARY_DIRECTORY}")
+
+        else ()
+
+            psq_import_utils_import_library (GTEST_LIBRARY gtest STATIC
+                                             "${GTEST_LIBRARY_LOCATION}")
+            psq_import_utils_import_library (GMOCK_LIBRARY gmock STATIC
+                                             "${GMOCK_LIBRARY_LOCATION}")
+            psq_import_utils_import_library (GTEST_MAIN_LIBRARY
+                                             gtest_main STATIC
+                                             "${GTEST_MAIN_LIBRARY_LOCATION}")
+            psq_import_utils_import_library (GMOCK_MAIN_LIBRARY
+                                             gmock_main STATIC
+                                             "${GMOCK_MAIN_LIBRARY_LOCATION}")
+
+            set (LIBRARY_LOCATIONS
+                 "${GTEST_LIBRARY_LOCATION} ${GMOCK_LIBRARY_LOCATION}")
+
+            _gmock_set_found ("-- overridden by ${LIBRARY_LOCATIONS}"
+                              EXTERNALLY_OVERRIDDEN)
+
+        endif ()
 
     endif (GTEST_INCLUDE_DIR AND
            GMOCK_INCLUDE_DIR AND
@@ -401,6 +457,10 @@ if (NOT GMOCK_FOUND AND
 
     if (SUCCESS)
 
+        if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+            set (GTEST_COMPILE_DEFINITIONS
+                 "-DGTEST_LINKED_AS_SHARED_LIBRARY=1")
+        endif ()
         set (GMOCK_SYSTEM_PATHS
              "${GTEST_LIBRARY_LOCATION} ${GMOCK_LIBRARY_LOCATION}")
         _gmock_set_found ("-- in system paths ${GMOCK_SYSTEM_PATHS}")
@@ -440,6 +500,11 @@ if (NOT GMOCK_FOUND AND NOT GMOCK_PREFER_SOURCE_BUILD)
                                                          gtest
                                                          GTEST_MAIN_LIBRARY
                                                          gtest_main)
+
+            if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+                set (GTEST_COMPILE_DEFINITIONS
+                     "-DGTEST_LINKED_AS_SHARED_LIBRARY=1")
+            endif ()
 
             set (GMOCK_FIND_DETAILS
                  "-- in system path ${GMOCK_LIBRARY_LOCATION} and "
@@ -626,10 +691,14 @@ endif ()
 
 function (_gmock_override_compile_flags TARGET)
 
-    set_property (TARGET ${TARGET}
-                  APPEND_STRING
-                  PROPERTY COMPILE_FLAGS
-                  " ${GMOCK_CXX_FLAGS}")
+    if (TARGET ${TARGET})
+
+        set_property (TARGET ${TARGET}
+                      APPEND_STRING
+                      PROPERTY COMPILE_FLAGS
+                      " ${GMOCK_CXX_FLAGS}")
+
+    endif ()
 
 endfunction ()
 
