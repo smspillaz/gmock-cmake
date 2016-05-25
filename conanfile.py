@@ -11,10 +11,17 @@ class GMockCMakeConan(ConanFile):
     generators = "cmake"
     requires = ("cmake-include-guard/master@smspillaz/cmake-include-guard",
                 "cmake-imported-project/master@"
-                "smspillaz/cmake-imported-project",
-                "cmake-unit/master@smspillaz/cmake-unit")
+                "smspillaz/cmake-imported-project")
     url = "http://github.com/polysquare/gmock-cmake"
     license = "MIT"
+    options = {
+        "dev": [True, False]
+    }
+    default_options = "dev=False"
+
+    def requirements(self):
+        if self.options.dev:
+            self.requires("cmake-module-common/master@smspillaz/cmake-module-common")
 
     def source(self):
         zip_name = "gmock-cmake.zip"

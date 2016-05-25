@@ -11,7 +11,7 @@ set (CMAKE_MODULE_PATH
 
 cmake_minimum_required (VERSION 2.8)
 
-include ("cmake/cmake-module-common/Common")
+include ("cmake/cmake-module-common/Common" OPTIONAL)
 
 include (AddSimpleGTestHelper)
 
@@ -567,6 +567,10 @@ set (MARKDOWN_FILES
      "${_CURRENT_LIST_DIR}/LICENCE.md"
      "${_CURRENT_LIST_DIR}/README.md")
 
-cmake_module_add_common_targets (NAMESPACE "gmock"
-                                 CMAKE_FILES ${CMAKE_FILES}
-                                 DOCUMENTATION_FILES ${MARKDOWN_FILES})
+if (COMMAND cmake_module_add_common_targets)
+
+    cmake_module_add_common_targets (NAMESPACE "gmock"
+                                     CMAKE_FILES ${CMAKE_FILES}
+                                     DOCUMENTATION_FILES ${MARKDOWN_FILES})
+
+endif ()
