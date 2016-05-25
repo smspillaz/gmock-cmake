@@ -23,6 +23,7 @@ LIBRARY_UPPERCASE
 LIBRARY
 namespaces
 NOLINT
+POLYSQUARE
 polysquare
 preprocessor
 pthread
