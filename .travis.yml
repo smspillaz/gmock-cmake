@@ -29,6 +29,8 @@ addons:
     packages:
     - python3.4-dev
 install:
+- git config --global user.name "Travis CI"
+- git config --global user.email "travis@travis-ci.org"
 - eval $(curl -LSs --retry 100 --connect-timeout 3 public-travis-scripts.polysquare.org/bootstrap.py
   | python /dev/stdin -d container -s setup/conan/setup.py -e bash -p /dev/stdout
   --cmake-version ${CMAKE_VERSION})
