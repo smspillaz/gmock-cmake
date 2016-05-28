@@ -319,7 +319,8 @@ function (gmock_test_from_parent_in_external_project)
                                      BINARY_DIR
                                      "${EXTERNAL_PROJECT_BINARY_DIRECTORY}"
                                      NAMESPACES
-                                     ${NAMESPACES})
+                                     ${NAMESPACES}
+                                     VERBOSE_BUILD)
 
     endfunction ()
 
@@ -354,7 +355,7 @@ function (gmock_test_from_parent_in_external_project)
         else ()
 
             set (LINKED_TO_PARENT_GTEST_REGEX
-                 "^.*simple_test.*${GTEST_SUBPROJECT_BINARY_DIR}/.*gtest.*$")
+                 "^.*simple_test.*${GMOCK_SUBPROJECT_BINARY_DIR}/.*gtest.*$")
             set (LINKED_TO_PARENT_GMOCK_REGEX
                  "^.*simple_test.*${GMOCK_SUBPROJECT_BINARY_DIR}/.*gmock.*$")
 
